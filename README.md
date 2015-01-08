@@ -1,8 +1,7 @@
-* Lightweight rootkit implemented by bash shell scripts v0.01
-*
-* by wzt 2015   http://www.cloud-sec.org
-*
-*
+Lightweight rootkit implemented by bash shell scripts v0.01
+
+by wzt 2015   http://www.cloud-sec.org
+
 
 Features:
 
