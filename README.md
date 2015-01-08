@@ -15,3 +15,4 @@ Tudo:
 2. hide process.
 3. hide network connections.
 4. connect backdoor.
+5. sudo thief support.

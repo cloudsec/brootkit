@@ -26,117 +26,15 @@ function builtin()
         		fake_a="$(command builtin $1 $2)"
         		fake_b=${fake_a/abcdmagic?()*/}
 			echo -n "$fake_b"
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
 			return ;;
 		"builtin")
 			echo "bash: builtin: builtin: syntax error, bash($BASH_VERSION) is not support."
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
 			return ;;
 		*)
 			command builtin $1 $2
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
 			;;
 	esac
 }
@@ -151,79 +49,11 @@ function declare()
         		fake_a="$(command declare $1 $2)"
         		fake_b=${fake_a/abcdmagic?()*/}
 			echo -n "$fake_b"
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
 			return ;;
 		*)
         		command declare $1 $2
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
 			return ;;
 	esac
 }
@@ -238,79 +68,11 @@ function typeset()
                         fake_a="$(command declare $1 $2)"
                         fake_b=${fake_a/abcdmagic?()*/}
                         echo -n "$fake_b"
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
                         return ;;
                 *)
                         command typeset $1 $2
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
                         return ;;
         esac
 }
@@ -324,41 +86,7 @@ function type()
                 *)
 			unset command
                         command type $1 $2
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
                         return ;;
         esac
 }
@@ -373,80 +101,12 @@ function set()
                         fake_a="$(command set)"
                         fake_b=${fake_a/abcdmagic?()*/}
                         echo -n "$fake_b"
-			#. builtin.sh
-			command()
-			{
-        			case $1 in
-                			"builtin")
-                        			builtin $2 $3
-                        			return ;;
-                			"declare")
-                        			declare $2 $3
-                        			return ;;
-                			"set")
-                        			set $2 $3
-                        			return ;;
-                			"unset")
-                        			fake_unset $2 $3
-                        			. builtin.sh
-                        			return ;;
-                			"type")
-                        			type $2 $3
-                        			return ;;
-                			"typeset")
-                        			typeset $2 $3
-                        			return ;;
-                			"command")
-                        			fake_command $2 $3
-                        			. builtin.sh
-                        			return ;;
-                			*)
-                        			unset command
-                        			command $2 $3
-                        			. builtin.sh
-                        			return ;;
-        			esac
-			}			
-
+			reset_command
                         return ;;
                 *)
 			echo $1 $2
                         command set $1 $2
-			#. builtin.sh
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+			reset_command
                         return ;;
         esac
 }
@@ -472,40 +132,7 @@ function fake_command()
                 *)
 			unset command
                         command $1 $2
-                        command()
-                        {
-                                case $1 in
-                                        "builtin")
-                                                builtin $2 $3
-                                                return ;;
-                                        "declare")
-                                                declare $2 $3
-                                                return ;;
-                                        "set")
-                                                set $2 $3
-                                                return ;;
-                                        "unset")
-                                                fake_unset $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        "type")
-                                                type $2 $3
-                                                return ;;
-                                        "typeset")
-                                                typeset $2 $3
-                                                return ;;
-                                        "command")
-                                                fake_command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                        *)
-                                                unset command
-                                                command $2 $3
-                                                . builtin.sh
-                                                return ;;
-                                esac
-                        }
-
+                        reset_command
                         return ;;
         esac
 }
@@ -524,7 +151,7 @@ function command()
 			return ;;
 		"unset")
 			fake_unset $2 $3
-			. builtin.sh
+			. brootkit.sh
 			return ;;
 		"type")
 			type $2 $3
@@ -538,9 +165,45 @@ function command()
                 *)
 			unset command
 			command $2 $3
-			. builtin.sh
+			. brootkit.sh
 			return ;;
         esac
+}
+
+function reset_command()
+{
+	function command()
+	{
+        	case $1 in
+                	"builtin")
+                        	builtin $2 $3
+                        	return ;;
+                	"declare")
+                        	declare $2 $3
+                        	return ;;
+                	"set")
+                        	set $2 $3
+                        	return ;;
+                	"unset")
+                        	fake_unset $2 $3
+                        	. brootkit.sh
+                        	return ;;
+                	"type")
+                        	type $2 $3
+                        	return ;;
+                	"typeset")
+                        	typeset $2 $3
+                        	return ;;
+                	"command")
+                        	fake_command $2 $3
+                        	return ;;
+                	*)
+                        	unset command
+                        	command $2 $3
+                        	. brootkit.sh
+                        	return ;;
+        	esac
+	}
 }
 
 function su()
