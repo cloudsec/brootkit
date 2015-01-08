@@ -12,8 +12,7 @@ features:
 
 tudo:
 
-1. hide file and directorys.
-2. hide process.
-3. hide network connections.
-4. connect backdoor.
-5. sudo thief support.
+1. hide process.
+2. hide network connections.
+3. connect backdoor.
+4. sudo thief support.
