@@ -11,9 +11,9 @@ features:
 2. su passwd thief.
 3. hide file and directorys.
 4. hide process.
+5. hide network connections.
 
 tudo:
 
-1. hide network connections.
-2. connect backdoor.
-3. sudo thief support.
+1. connect backdoor.
+2. sudo thief support.
