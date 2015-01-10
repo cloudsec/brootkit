@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo -e "\033[31m\t\t\t\twelcome to brootkit\033[0m\033[32m"
