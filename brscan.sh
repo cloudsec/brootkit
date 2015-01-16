@@ -1,7 +1,11 @@
 #!/bin/bash
 
+declare br_remote_host="localhost"
 declare -a br_ports
 declare br_port_num=0
+declare br_thread_num=0
+declare br_timeout=30
+declare br_logfile="brscan.log"
 
 # $1 => remote host
 # $2 => remote port
@@ -40,10 +44,9 @@ function br_scan_port()
 {
 	local i
 
-	#for port in ${br_ports[@]}
-	for ((i = 0; i < $br_port_num; i+=$2))
+	for ((i = 0; i < $br_port_num; i+=$br_thread_num))
 	do
-		thread_scan $1 $i $2 
+		thread_scan $br_remote_host $i $br_thread_num
 	done
 }
 
@@ -91,10 +94,67 @@ function br_parse_port()
 	IFS=$tmp_ifs
 }
 
-if [ $# -eq 0 ]; then
-	echo "$0 <remote_host> <ports> <thread_num>"
-	exit 0
-fi
+function br_show_arg()
+{
+	echo -ne "host: $br_remote_host | total ports: $br_port_num | thread num: $br_thread_num "
+	echo -e "timeout: $br_timeout | logfile: $br_logfile\n"
+}
 
-br_parse_port $2
-br_scan_port $1 $3
+function br_usage()
+{
+	echo -e "$1 <-p> [-n|-t|-o|-h] <remote_host>\n"
+	echo -e "option:"
+	echo -e "-p\t\tports, pattern: port1,port2,port3-port7,portn..."
+	echo -e "-n\t\tthread num, defalut is 10"
+	echo -e "-t\t\ttimeout, default is 30s"
+	echo -e "-o\t\tresults write into log file, default is brscan.log"
+	echo -e "-h\t\thelp information."
+	echo -e "\nexp:"
+	echo -e "$1 -p 21,22,23-25,80,135-139,8080 -t 20 www.cloud-sec.org"
+	echo -e "$1 -p 1-65525 -n 200 -t 20 www.cloud-sec.org"
+}
+
+function main()
+{
+	if [ $# -eq 0 ]; then
+		br_usage $0
+		exit 0
+	fi
+
+	while getopts "p:n:t:o:h" arg
+	do
+	case $arg in
+		p)
+			br_parse_port $OPTARG
+			;;
+		n)
+			br_thread_num=$OPTARG
+			;;
+		t)
+			br_timeout=$OPTARG
+			;;
+		o)
+			br_logfile=$OPTARG
+			;;
+		h)
+			br_usage $0
+			exit 0
+			;;
+		?)
+			echo "unkown arguments."
+			exit 1
+			;;
+		esac
+	done
+				
+	shift $((OPTIND-1))
+	br_remote_host=$@
+
+	[ $br_port_num -lt $br_thread_num ] && br_thread_num=$br_port_num
+
+	#br_show_ports
+	br_show_arg
+	br_scan_port
+}
+
+main $@
