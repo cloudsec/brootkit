@@ -7,35 +7,78 @@ declare br_thread_num=0
 declare br_timeout=30
 declare br_logfile="brscan.log"
 
+function get_run_time()
+{
+        local run_count local_hz run_time
+	local start_time curr_time
+
+	if [ -d "/proc/$1" ]; then
+        	run_count=`cat /proc/$1/stat | cut -d " " -f 22`
+	else
+		return 0
+	fi
+
+        local_hz=`getconf CLK_TCK`
+        start_time=$(($run_count/$local_hz))
+
+        curr_time=`cat /proc/uptime | cut -d " " -f 1 | cut -d "." -f 1`
+        run_time=$((curr_time-start_time))
+
+	return $run_time
+}
+
 # $1 => remote host
 # $2 => remote port
 # $3 => thread_num
 function thread_scan()
 {
-	local i
+	local i j k pid run_time sock_fd 
+
+	mkdir -p .scan
 
 	for ((i = 0; i < $3; i++))
 	do
-	{
+		{
 		let "sock_fd=$2+$i"
-		/bin/bash -c "exec $sock_fd<> /dev/tcp/$1/${br_ports[$sock_fd]}" 2>"sock."$sock_fd
-	}&
+		let "j=$2+$i+3"
+		/bin/bash -c "exec $j<> /dev/tcp/$1/${br_ports[$sock_fd]}" 2>${br_ports[$sock_fd]}
+		}&
+		let "k=$2+$i"
+		echo $k ${br_ports[$k]} $!
+		echo ${br_ports[$k]} > ".scan/$!"
 	done
 
-	wait
+	sleep $br_timeout
+
+        for pid in `jobs -p`
+        do
+		get_run_time $pid
+		run_time=$?
+		[ $run_time -eq 0 ] && continue
+
+                if [ $run_time -ge $br_timeout ]; then
+                        kill -9 $pid >/dev/null 2>&1
+			rm -f ".scan/$pid"
+                fi
+        done
 
 	for ((i = 0; i < $3; i++))
 	do
 		let "sock_fd=$2+$i"
-                if [ -s "sock."$sock_fd ]; then
-                        #echo -e "connect to $1:${br_ports[$sock_fd]} failed.\b"
-                        echo -n ""
-                else
-                        echo "connect to $1:${br_ports[$sock_fd]} ok."
+                if [ ! -s ${br_ports[$sock_fd]} ]; then
+			for aa in `ls .scan`
+			do
+				tport=`cat ".scan/$aa"`
+				if [ $tport -eq ${br_ports[$sock_fd]} ]; then
+                        		echo "connect to $1:${br_ports[$sock_fd]} ok."
+				fi
+			done
                 fi
 		
-		rm -f "sock."$sock_fd
+		rm -f ${br_ports[$sock_fd]}
 	done
+
+	rm -fr .scan
 }
 
 # $1 => remote host
@@ -125,17 +168,13 @@ function main()
 	do
 	case $arg in
 		p)
-			br_parse_port $OPTARG
-			;;
+			br_parse_port $OPTARG ;;
 		n)
-			br_thread_num=$OPTARG
-			;;
+			br_thread_num=$OPTARG ;;
 		t)
-			br_timeout=$OPTARG
-			;;
+			br_timeout=$OPTARG ;;
 		o)
-			br_logfile=$OPTARG
-			;;
+			br_logfile=$OPTARG ;;
 		h)
 			br_usage $0
 			exit 0

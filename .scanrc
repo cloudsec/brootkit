@@ -1,7 +1,0 @@
-#!/bin/bash
-
-echo "haha"
-
-TMOUT=5
-
-export $TMOUT
