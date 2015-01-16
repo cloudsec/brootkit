@@ -19,10 +19,13 @@ tudo:
 
 1. sudo thief support.
 
-install:
+
+INSTALL
 
 1. edit br.conf first
 
+   brootkit config file.
+   
    the ports will be hide: port1,port2,...,portn.
    HIDE_PORT               8080,8899
    the files will be hide: file1,file2,...,filen.
@@ -58,7 +61,8 @@ install:
 
    connect to www.aliyun.com:80 ok.
 
-source:
+
+SOURCE
 
    https://github.com/cloudsec/brootkit
 
