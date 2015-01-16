@@ -21,7 +21,6 @@ tudo:
 
 
 INSTALL
-=======
 
 1. edit br.conf first
 
@@ -64,7 +63,6 @@ INSTALL
 
 
 SOURCE
-======
 
    https://github.com/cloudsec/brootkit
 
