@@ -44,12 +44,13 @@ function thread_scan()
 		/bin/bash -c "exec $j<> /dev/tcp/$1/${br_ports[$sock_fd]}" 2>${br_ports[$sock_fd]}
 		}&
 		let "k=$2+$i"
-		echo $k ${br_ports[$k]} $!
+		#echo $k ${br_ports[$k]} $!
 		echo ${br_ports[$k]} > ".scan/$!"
 	done
 
 	sleep $br_timeout
 
+	exec 2>&-
         for pid in `jobs -p`
         do
 		get_run_time $pid
