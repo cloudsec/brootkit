@@ -2,10 +2,53 @@
 
 declare br_remote_host="localhost"
 declare -a br_ports
+declare -a br_open_ports
 declare br_port_num=0
+declare br_curr_port_num=0
+declare br_open_port_num=0
 declare br_thread_num=0
 declare br_timeout=30
 declare br_logfile="brscan.log"
+declare total_run_time
+
+declare -a playx=('/' '|' '\\' '-')
+declare playx_len=4
+
+function compute_run_time()
+{
+        local day hour min rtime
+
+        day=$(($1/3600/24))
+        hour=$(($1/3600))
+        min=$(($1/60))
+
+        if [ $min -eq 0 ]; then
+                sec=$(($1%60))
+		total_run_time="$sec s"
+        else
+                if [ $hour -eq 0 ]; then
+                        sec=$(($1%60))
+                        total_run_time="$min m $sec s"
+                else
+                        if [ $day -eq 0 ]; then
+                                tmp=$(($1%3600))
+                                min=$(($tmp/60))
+                                sec=$(($tmp%60))
+                                total_run_time="$hour h $min m $sec s"
+                        else
+                                # 86400 = 3600 * 24
+                                tmp=$(($1%86400))
+                                hour=$(($tmp/3600))
+                                tmp1=$(($tmp%3600))
+                                min=$(($tmp1/60))
+                                sec=$(($tmp1%60))
+                                total_run_time="$day d $hour h $min m $sec s"
+                        fi
+
+
+                fi
+        fi
+}
 
 function get_run_time()
 {
@@ -27,12 +70,28 @@ function get_run_time()
 	return $run_time
 }
 
+function br_show_open_ports()
+{
+	local x i
+
+	get_run_time $$
+	run_time=$?
+
+	compute_run_time $run_time
+
+	i=$((max_row_num+1))
+	[ $br_thread_num -gt $i ] && x=$i || x=$((br_thread_num+4))
+	printf "\033[${x};1H\033[32;1m$total_run_time [%5d/%-5d]\t%-16s: ${br_open_ports[*]}\033[0m" \
+		$br_curr_port_num $br_port_num $br_remote_host 
+}
+
 # $1 => remote host
 # $2 => remote port
 # $3 => thread_num
 function thread_scan()
 {
-	local i j k pid run_time sock_fd 
+	local tport pid pidfile sock_fd
+	local i j k m=0 run_time x
 
 	mkdir -p .scan
 
@@ -44,8 +103,16 @@ function thread_scan()
 		/bin/bash -c "exec $j<> /dev/tcp/$1/${br_ports[$sock_fd]}" 2>${br_ports[$sock_fd]}
 		}&
 		let "k=$2+$i"
-		#echo $k ${br_ports[$k]} $!
+		x=$((m+3))
+		if [ $x -ge $max_row_num ]; then
+			 m=0;x=3
+		else
+			((m++))
+		fi
+		printf "\033[${x};1H\033[33mthread<%-5d>\t\t--\t\tpid <%-5d>\t-->\t%-5d\033[?25l" \
+			$i $! ${br_ports[$k]}
 		echo ${br_ports[$k]} > ".scan/$!"
+		[ $br_curr_port_num -ge $br_port_num ] && break || ((br_curr_port_num++))
 	done
 
 	sleep $br_timeout
@@ -67,11 +134,12 @@ function thread_scan()
 	do
 		let "sock_fd=$2+$i"
                 if [ ! -s ${br_ports[$sock_fd]} ]; then
-			for aa in `ls .scan`
+			for pid_file in `ls .scan`
 			do
-				tport=`cat ".scan/$aa"`
+				tport=`cat ".scan/$pid_file"`
 				if [ $tport -eq ${br_ports[$sock_fd]} ]; then
-                        		echo "connect to $1:${br_ports[$sock_fd]} ok."
+					br_open_ports[$br_open_port_num]=${br_ports[$sock_fd]}
+					((br_open_port_num++))
 				fi
 			done
                 fi
@@ -79,6 +147,7 @@ function thread_scan()
 		rm -f ${br_ports[$sock_fd]}
 	done
 
+	br_show_open_ports
 	rm -fr .scan
 }
 
@@ -116,6 +185,7 @@ function parse_port()
 		br_ports[$br_port_num]=$port
 		((br_port_num++))
 	done
+	((br_port_num--))
 }
 
 function br_parse_port()
@@ -123,8 +193,7 @@ function br_parse_port()
 	declare -a ports
 	local tmp_ifs port
 
-	tmp_ifs=$IFS; IFS=','
-	ports=$1
+	tmp_ifs=$IFS; IFS=','; ports=$1
 	
 	for port in ${ports[@]}
 	do
@@ -140,8 +209,22 @@ function br_parse_port()
 
 function br_show_arg()
 {
-	echo -ne "host: $br_remote_host | total ports: $br_port_num | thread num: $br_thread_num "
-	echo -e "timeout: $br_timeout | logfile: $br_logfile\n"
+	echo -ne "\033[1;1H"
+	echo -ne "\033[31;1mhost: $br_remote_host | total ports: $br_port_num | thread num: $br_thread_num "
+	echo -e "timeout: $br_timeout | logfile: $br_logfile\n\033[0m"
+}
+
+function br_scan_init()
+{
+	echo -ne "\033[2J"
+        MAX_ROW_NUM=`stty size|cut -d " " -f 1`
+        MAX_COL_NUM=`stty size|cut -d " " -f 2`
+	max_row_num=$((MAX_ROW_NUM-5))
+}
+
+function br_scan_exit()
+{
+	echo -e "\033[?25h"
 }
 
 function br_usage()
@@ -193,8 +276,10 @@ function main()
 	[ $br_port_num -lt $br_thread_num ] && br_thread_num=$br_port_num
 
 	#br_show_ports
+	br_scan_init
 	br_show_arg
 	br_scan_port
+	br_scan_exit
 }
 
 main $@
