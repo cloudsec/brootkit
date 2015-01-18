@@ -7,12 +7,50 @@ declare br_port_num=0
 declare br_curr_port_num=0
 declare br_open_port_num=0
 declare br_thread_num=0
-declare br_timeout=30
+declare br_timeout=2
 declare br_logfile="brscan.log"
 declare total_run_time
+declare max_row_num
 
 declare -a playx=('/' '|' '\\' '-')
 declare playx_len=4
+
+declare max_col_num=64
+declare base_row=0
+declare base_col=1
+declare cur_col=2
+declare total_port=10
+declare cur_port=0
+
+function br_run_play()
+{
+        local i x y tmp_col
+
+        tmp_col=$((br_curr_port_num * max_col_num / br_port_num))
+
+        i=$((max_row_num+1))
+        [ $br_thread_num -gt $i ] && x=$i || x=$((br_thread_num+4))
+
+        for ((i = 1; i < $tmp_col; i++))
+        do
+                y=$((base_col+i))
+                [ $y -gt $max_col_num ] && break
+                echo -ne "\033[${x};${y}H>\033[?25l"
+        done
+}
+
+function br_play_init()
+{
+        local x y i
+
+        i=$((max_row_num+1))
+        [ $br_thread_num -gt $i ] && x=$i || x=$((br_thread_num+4))
+
+        echo -ne "\033[${x};${base_col}H\033[33m[\033[0m"
+
+        y=$((max_col_num+1))
+        echo -ne "\033[${x};${y}H\033[33m]\033[0m"
+}
 
 function compute_run_time()
 {
@@ -72,7 +110,7 @@ function get_run_time()
 
 function br_show_open_ports()
 {
-	local x i
+	local x y i
 
 	get_run_time $$
 	run_time=$?
@@ -81,8 +119,14 @@ function br_show_open_ports()
 
 	i=$((max_row_num+1))
 	[ $br_thread_num -gt $i ] && x=$i || x=$((br_thread_num+4))
-	printf "\033[${x};1H\033[32;1m$total_run_time [%5d/%-5d]\t%-16s: ${br_open_ports[*]}\033[0m" \
-		$br_curr_port_num $br_port_num $br_remote_host 
+
+	y=$((max_col_num+3))
+	printf "\033[${x};${y}H\033[32;1m %5d/%-5d\t$total_run_time\033[0m" \
+		$br_curr_port_num $br_port_num
+
+	x=$((x+2)); y=1
+	printf "\033[${x};${y}H\033[32;1m%s: ${br_open_ports[*]}\033[0m" \
+		$br_remote_host 
 }
 
 # $1 => remote host
@@ -147,6 +191,7 @@ function thread_scan()
 		rm -f ${br_ports[$sock_fd]}
 	done
 
+	br_run_play
 	br_show_open_ports
 	rm -fr .scan
 }
@@ -277,6 +322,7 @@ function main()
 
 	#br_show_ports
 	br_scan_init
+	br_play_init
 	br_show_arg
 	br_scan_port
 	br_scan_exit
