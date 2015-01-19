@@ -14,6 +14,7 @@
     5. hide network connections.
     6. connect backdoor.
     7. muilt thread port scanner.
+    8. http download.
 
 ######TUBO
     1. sudo thief support.
