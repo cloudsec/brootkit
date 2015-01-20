@@ -3,17 +3,21 @@
 declare remote_host
 declare remote_port
 declare remote_file
+declare remote_file_len
 
 function sock_read()
 {
-        local line tmp
-	local data data_len=0
+        local line tmp 
 
         read -u 9 -t 5 line
         if ! echo $line|grep -e "200 OK" >/dev/null; then
                 echo $line
-                return
-        fi
+		rm -f $remote_file
+		socket_close
+		exit
+        else
+		echo "response 200 ok."
+	fi
 
         while read -u 9 -t 5 line
         do
@@ -23,11 +27,11 @@ function sock_read()
 
                 tmp=`echo $line|cut -d " " -f 1`
                 if [ "$tmp" == "Content-Length:" ]; then
-                        data_len=`echo $line|cut -d " " -f 2`
+                        remote_file_len=`echo $line|cut -d " " -f 2`
                 fi
         done
 
-        #echo "datalen: $data_len"
+	echo "length: $remote_file_len"
         while read -u 9 -t 5 line
         do
                 echo -e "$line" >>$remote_file
@@ -40,13 +44,13 @@ function sock_write()
 
         buf="GET /$3 http/1.0\r\nHost: $1:$2\r\n"
         echo -e $buf >&9
-        [ $? -ne 0 ] && echo "send http request failed."
+        [ $? -eq 0 ] && echo "send http request ok." || echo "send http request failed."
 }
 
 function socket_create()
 {
         exec 9<> /dev/tcp/$1/$2
-        [ $? -ne 0 ] && echo "connect to $1:$2 failed."
+        [ $? -eq 0 ] && echo "connect to $1:$2 ok." || echo "connect to $1:$2 failed."
 }
 
 function socket_close()
@@ -66,13 +70,29 @@ function parse_url()
 	remote_host=`echo $remote_host | awk -F ':' '{print $1}'`
 	
 	[ "$remote_port" == "" ] && remote_port=80
-
-	echo $remote_host $remote_port $remote_file
 }
 
 function file_init()
 {
 	[ -f $remote_file ] && rm -f $remote_file || touch $remote_file
+}
+
+function display_start()
+{
+	local tmp
+
+	tmp=`date +'%F %T'` 
+	tmp="--$tmp-- $1"
+	echo -e $tmp
+}
+
+function display_finsh()
+{
+	local tmp
+
+	tmp=`date +'%F %T'` 
+	tmp="\n--$tmp-- - $remote_file saved $remote_file_len"
+	echo -e "$tmp"
 }
 
 function wget_usage()
@@ -91,11 +111,13 @@ function main()
         fi
 
 	parse_url $@
-	touch $remote_file
 
+	file_init
+	display_start $1
         socket_create $remote_host $remote_port
         sock_write $remote_host $remote_port $remote_file
         sock_read
+	display_finsh
         socket_close
 }
 
