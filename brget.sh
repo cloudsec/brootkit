@@ -19,7 +19,7 @@ function sock_read()
 		echo "response 200 ok."
 	fi
 
-        while read -u 9 -t 5 line
+        while IFS= read -r -u 9 -t 5 line
         do
 		if [ ${#line} -eq 1 ]; then
 			break
@@ -32,9 +32,9 @@ function sock_read()
         done
 
 	echo "length: $remote_file_len"
-        while read -u 9 -t 5 line
+        while IFS= read -r -u 9 -t 5 line
         do
-                echo -e "$line" >>$remote_file
+                echo "$line" >>$remote_file
         done
 }
 
