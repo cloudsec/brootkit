@@ -19,7 +19,7 @@ function sock_read()
 		echo "response 200 ok."
 	fi
 
-        while IFS= read -r -u 9 -t 5 line
+        while read -u 9 -t 5 line
         do
 		if [ ${#line} -eq 1 ]; then
 			break
@@ -31,11 +31,13 @@ function sock_read()
                 fi
         done
 
-	echo "length: $remote_file_len"
-        while IFS= read -r -u 9 -t 5 line
-        do
-                echo "$line" >>$remote_file
-        done
+	echo "length: $remote_file_len}"
+
+	tmp=${#remote_file_len}
+	((tmp--))
+	remote_file_len=${remote_file_len:0:$tmp}
+	echo "dd bs=$remote_file_len count=1 of=$remote_file <&9"
+	dd bs=$remote_file_len count=1 of=$remote_file <&9
 }
 
 function sock_write()
@@ -95,7 +97,7 @@ function display_finsh()
 	echo -e "$tmp"
 }
 
-function wget_usage()
+function brget_usage()
 {
 	echo -e "$0 <url>\n"
 	echo "exp:"
@@ -106,7 +108,7 @@ function wget_usage()
 function main()
 {
         if [ $# -eq 0 ]; then
-		wget_usage $1
+		brget_usage $1
                 exit
         fi
 
