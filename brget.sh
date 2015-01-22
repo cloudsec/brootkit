@@ -70,8 +70,6 @@ function compute_run_time()
                                 sec=$(($tmp1%60))
                                 total_run_time="$day d $hour h $min m $sec s"
                         fi
-
-
                 fi
         fi
 }
@@ -96,19 +94,39 @@ function get_run_time()
         return $run_time
 }
 
+function br_handle_redirect()
+{
+	echo "haha"
+        parse_url $1
+
+        socket_create $remote_host $remote_port
+        sock_write $remote_host $remote_port $remote_file
+        sock_read
+        display_finsh
+        socket_close
+}
+
 function sock_read()
 {
         local line tmp len=0 idx=0
+	local http_status flag=0
 
         read -u 9 -t 5 line
-        if ! echo $line|grep -e "200 OK" >/dev/null; then
-                echo $line
-		rm -f $remote_file
-		socket_close
-		exit
-        else
-		echo "response 200 ok."
-	fi
+	http_status=`echo $line | awk '{print $2}'`
+
+	case $http_status in
+		"200")
+			echo "response 200 ok."
+			flag=0 ;;
+		"302")
+			echo "response 302 ok."
+			flag=1 ;;
+		*)
+                	echo $line
+			rm -f $local_file
+			socket_close
+			exit ;;
+	esac
 
         while read -u 9 -t 5 line
         do
@@ -119,8 +137,16 @@ function sock_read()
                 tmp=`echo $line|cut -d " " -f 1`
                 if [ "$tmp" == "Content-Length:" ]; then
                         remote_file_len=`echo $line|cut -d " " -f 2`
+                elif [ "$tmp" == "Location:" ]; then
+                        redirect_url=`echo $line|cut -d " " -f 2`
+			echo "redirect: $redirect_url"
                 fi
         done
+
+	if [ $flag -eq 1 ]; then
+		br_handle_redirect $redirect_url
+		exit
+	fi
 
 	echo -e "length: $remote_file_len\n"
 
@@ -178,6 +204,8 @@ function parse_url()
 	remote_host=`echo $remote_host | awk -F ':' '{print $1}'`
 	
 	[ "$remote_port" == "" ] && remote_port=80
+
+	echo $remote_host:$remote_port $remote_file
 }
 
 function file_init()
