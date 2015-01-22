@@ -7,7 +7,7 @@ declare remote_file_len
 
 function sock_read()
 {
-        local line tmp 
+        local line tmp len=0 idx=0
 
         read -u 9 -t 5 line
         if ! echo $line|grep -e "200 OK" >/dev/null; then
@@ -36,8 +36,13 @@ function sock_read()
 	tmp=${#remote_file_len}
 	((tmp--))
 	remote_file_len=${remote_file_len:0:$tmp}
-	echo "dd bs=$remote_file_len count=1 of=$remote_file <&9"
-	dd bs=$remote_file_len count=1 of=$remote_file <&9
+
+        while [ $len -le $remote_file_len ]
+        do
+                `dd bs=1024 count=1 of=$remote_file seek=$idx <&9 2>/dev/null`
+                ((idx++))
+                len=$((idx*1024))
+        done
 }
 
 function sock_write()
