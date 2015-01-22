@@ -3,7 +3,98 @@
 declare remote_host
 declare remote_port
 declare remote_file
-declare remote_file_len
+declare local_file
+declare remote_file_len=0
+declare curr_file_len=0
+declare max_col_num=64
+declare total_run_time
+
+function br_run_init()
+{
+	local i
+	
+	echo -ne "["
+	for ((i = 1; i < $max_col_num; i++))
+	do
+		echo -ne " "
+	done
+	echo -ne "]\r"
+}
+
+function br_run_play()
+{
+        local i x y tmp_col
+
+        tmp_col=$((curr_file_len * max_col_num / remote_file_len))
+
+	echo -ne "["
+        for ((i = 1; i < $tmp_col; i++))
+        do
+                echo -ne ">"
+        done
+	echo -ne "\r"
+}
+
+function br_run_finsh()
+{
+	echo -ne "\033[?25h"
+}
+
+function compute_run_time()
+{
+        local day hour min rtime
+
+        day=$(($1/3600/24))
+        hour=$(($1/3600))
+        min=$(($1/60))
+
+        if [ $min -eq 0 ]; then
+                sec=$(($1%60))
+                total_run_time="$sec s"
+        else
+                if [ $hour -eq 0 ]; then
+                        sec=$(($1%60))
+                        total_run_time="$min m $sec s"
+                else
+                        if [ $day -eq 0 ]; then
+                                tmp=$(($1%3600))
+                                min=$(($tmp/60))
+                                sec=$(($tmp%60))
+                                total_run_time="$hour h $min m $sec s"
+                        else
+                                # 86400 = 3600 * 24
+                                tmp=$(($1%86400))
+                                hour=$(($tmp/3600))
+                                tmp1=$(($tmp%3600))
+                                min=$(($tmp1/60))
+                                sec=$(($tmp1%60))
+                                total_run_time="$day d $hour h $min m $sec s"
+                        fi
+
+
+                fi
+        fi
+}
+
+function get_run_time()
+{
+        local run_count local_hz run_time
+        local start_time curr_time
+
+        if [ -d "/proc/$1" ]; then
+                run_count=`cat /proc/$1/stat | cut -d " " -f 22`
+        else
+                return 0
+        fi
+
+        local_hz=`getconf CLK_TCK`
+        start_time=$(($run_count/$local_hz))
+
+        curr_time=`cat /proc/uptime | cut -d " " -f 1 | cut -d "." -f 1`
+        run_time=$((curr_time-start_time))
+
+        return $run_time
+}
 
 function sock_read()
 {
@@ -31,18 +122,25 @@ function sock_read()
                 fi
         done
 
-	echo "length: $remote_file_len}"
+	echo -e "length: $remote_file_len\n"
+
+	br_run_init
 
 	tmp=${#remote_file_len}
 	((tmp--))
 	remote_file_len=${remote_file_len:0:$tmp}
 
-        while [ $len -le $remote_file_len ]
+        while [ $curr_file_len -le $remote_file_len ]
         do
-                `dd bs=1024 count=1 of=$remote_file seek=$idx <&9 2>/dev/null`
+                `dd bs=1024 count=1 of=$local_file seek=$idx <&9 2>/dev/null`
                 ((idx++))
-                len=$((idx*1024))
+                curr_file_len=$((idx*1024))
+		br_run_play
         done
+
+        #get_run_time $$
+        #compute_run_time $?
+        #echo -ne "\n$total_run_time"
 }
 
 function sock_write()
@@ -72,6 +170,9 @@ function parse_url()
 
 	url=${url#http://}
 	remote_file=${url#*/}
+
+	[ -n "$2" ] && local_file=$2 || local_file=${url##*/}
+
 	remote_host=`echo $url | awk -F '/' '{print $1}'`
 	remote_port=`echo $remote_host | awk -F ':' '{print $2}'`
 	remote_host=`echo $remote_host | awk -F ':' '{print $1}'`
@@ -81,7 +182,7 @@ function parse_url()
 
 function file_init()
 {
-	[ -f $remote_file ] && rm -f $remote_file || touch $remote_file
+	[ -f $local_file ] && rm -f $local_file || touch $local_file
 }
 
 function display_start()
@@ -98,13 +199,13 @@ function display_finsh()
 	local tmp
 
 	tmp=`date +'%F %T'` 
-	tmp="\n--$tmp-- - $remote_file saved $remote_file_len"
+	tmp="\n\n--$tmp-- - $local_file saved $remote_file_len"
 	echo -e "$tmp"
 }
 
 function brget_usage()
 {
-	echo -e "$0 <url>\n"
+	echo -e "$0 <http_url> [local_file]\n"
 	echo "exp:"
 	echo "$0 http://www.baidu.com/index.html"
 	echo "$0 http://www.baidu.com:80/index.html"
