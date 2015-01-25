@@ -258,7 +258,7 @@ function br_send_request()
 {
         local buf1 buf2 buf3 buf4 req_header
 
-        buf1="GET /$3 http/1.1\r\nHost: $1:$2\r\n"
+        buf1="GET /$3 http/1.0\r\nHost: $1:$2\r\n"
 	buf2="Connection: keep-alive\r\nAccept: */*\r\n"
 	buf3="Accept-Encoding: gzip, deflate\r\n"
 	buf4="User-Agent: Mozilla/5.0 Chrome/39.0.2171.99 Safari/537.36\r\n"
