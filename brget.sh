@@ -4,8 +4,10 @@ declare remote_host
 declare remote_port
 declare remote_file
 declare local_file
+declare redirect_url
 declare remote_file_len=0
-declare curr_file_len=0
+declare remote_type=0
+declare file_type=0
 declare max_col_num=64
 declare total_run_time
 
@@ -96,85 +98,174 @@ function get_run_time()
 
 function br_handle_redirect()
 {
-	echo "haha"
-        parse_url $1
+        parse_url $redirect_url
 
         socket_create $remote_host $remote_port
-        sock_write $remote_host $remote_port $remote_file
-        sock_read
+        send_request $remote_host $remote_port $remote_file
+        br_get_run
         display_finsh
         socket_close
 }
 
-function sock_read()
+function br_check_status()
 {
-        local line tmp len=0 idx=0
-	local http_status flag=0
+	local http_status line
 
-        read -u 9 -t 5 line
-	http_status=`echo $line | awk '{print $2}'`
+        read -u 9 -t 30 line
+        http_status=`echo $line | awk '{print $2}'`
 
-	case $http_status in
-		"200")
-			echo "response 200 ok."
-			flag=0 ;;
-		"302")
-			echo "response 302 ok."
-			flag=1 ;;
-		*)
-                	echo $line
-			rm -f $local_file
-			socket_close
-			exit ;;
-	esac
+        case $http_status in
+                "200")
+                        echo "response 200 ok."
+			;;
+                "302")
+                        echo "response 302 ok."
+                        ;;
+                *)
+                        echo "bad http request: $line"
+                        rm -f $local_file
+                        socket_close
+                        exit ;;
+        esac
+}
 
-        while read -u 9 -t 5 line
+function br_check_type()
+{
+	local line tmp tmp1
+
+        while read -u 9 -t 30 line
         do
-		if [ ${#line} -eq 1 ]; then
-			break
-		fi
+                echo -e $line
+                [ ${#line} -eq 1 ] && break
 
                 tmp=`echo $line|cut -d " " -f 1`
-                if [ "$tmp" == "Content-Length:" ]; then
-                        remote_file_len=`echo $line|cut -d " " -f 2`
-                elif [ "$tmp" == "Location:" ]; then
-                        redirect_url=`echo $line|cut -d " " -f 2`
-			echo "redirect: $redirect_url"
-                fi
+                case $tmp in
+                        "Content-Length:")
+                                remote_file_len=`echo $line|cut -d " " -f 2`
+                                remote_type=0 ;;
+                        "Location:")
+                                redirect_url=`echo $line|cut -d " " -f 2`
+                                remote_type=1 ;;
+                        "Transfer-Encoding:")
+				tmp1=`echo $line|cut -d " " -f 2`
+				if echo $tmp1| grep "chunked" >/dev/null ; then
+                                	remote_type=2
+				fi ;;
+			"Content-Encoding:")
+				tmp1=`echo $line|cut -d " " -f 2`
+				if echo $tmp1| grep "gzip" >/dev/null ; then
+                                	file_type=2
+				fi ;;
+                esac
         done
+}
 
-	if [ $flag -eq 1 ]; then
-		br_handle_redirect $redirect_url
-		exit
-	fi
+function br_handle_direct()
+{
+	local curr_file_len=0 idx=0 tmp
 
-	echo -e "length: $remote_file_len\n"
+	echo "start direct download..."
+        br_run_init
 
-	br_run_init
-
-	tmp=${#remote_file_len}
-	((tmp--))
-	remote_file_len=${remote_file_len:0:$tmp}
+        tmp=${#remote_file_len}; ((tmp--))
+        remote_file_len=${remote_file_len:0:$tmp}
+	echo "length: $remote_file_len bytes."
 
         while [ $curr_file_len -le $remote_file_len ]
         do
                 `dd bs=1024 count=1 of=$local_file seek=$idx <&9 2>/dev/null`
                 ((idx++))
-                curr_file_len=$((idx*1024))
-		br_run_play
+              	curr_file_len=$((idx*1024))
+                br_run_play
         done
-
-        #get_run_time $$
-        #compute_run_time $?
-        #echo -ne "\n$total_run_time"
 }
 
-function sock_write()
+function br_convert_file()
 {
-        local buf
+	case $file_type in
+		2)
+			mv $local_file "$local_file.gz"
+			gunzip -d "$local_file.gz"
+			;;
+	esac
+}
 
-        buf="GET /$3 http/1.0\r\nHost: $1:$2\r\n"
-        echo -e $buf >&9
+function br_handle_chunk()
+{
+	local curr_file_len=0 idx=0 n tmp_file_len
+
+	echo "start chunk download..."
+        #br_run_init
+        while read -u 9 -t 30 line
+	do
+		if [ ${#line} -eq 1 ]; then
+			echo "download ok."
+			break
+		fi
+		echo "!$line"
+
+        	tmp_file_len=${#line}; ((tmp_file_len--))
+        	remote_file_len=${line:0:$tmp_file_len}
+		echo $remote_file_len
+		remote_file_len=`printf "%d" "0x$remote_file_len"`
+		echo "length: $remote_file_len bytes."
+
+		tmp_file_len=$remote_file_len; n=1024
+        	while [ $tmp_file_len -ne 0 ]
+        	do
+			if [ $tmp_file_len -lt 1024 ]; then
+				n=$tmp_file_len
+                		`dd bs=$n count=1 of="$local_file.tmp" seek=0 <&9 2>/dev/null`
+			else
+                		`dd bs=1024 count=1 of=$local_file seek=$idx <&9 2>/dev/null`
+			fi
+			tmp_file_len=$((tmp_file_len-n))
+			curr_file_len=$((curr_file_len+n))
+			((idx++))
+                	#br_run_play
+			#echo $curr_file_len $n $idx 
+        	done
+
+		if [ -a "$local_file.tmp" ]; then
+			cat "$local_file.tmp" >> $local_file
+			rm -f "$local_file.tmp"
+		fi
+	done
+
+	br_convert_file
+}
+
+function br_get_run()
+{
+	br_check_status
+	br_check_type
+
+	echo $remote_type
+	case $remote_type in
+		0)
+			br_handle_direct
+			;;
+		1)
+			br_handle_redirect
+			exit ;;
+		2)
+			br_handle_chunk
+			;;
+	esac
+}
+
+function br_send_request()
+{
+        local buf1 buf2 buf3 buf4 req_header
+
+        buf1="GET /$3 http/1.1\r\nHost: $1:$2\r\n"
+	buf2="Connection: keep-alive\r\nAccept: */*\r\n"
+	buf3="Accept-Encoding: gzip, deflate\r\n"
+	buf4="User-Agent: Mozilla/5.0 Chrome/39.0.2171.99 Safari/537.36\r\n"
+
+	req_header=$buf1$buf2$buf3$buf4
+	echo -e $req_header
+        echo -e $req_header >&9
         [ $? -eq 0 ] && echo "send http request ok." || echo "send http request failed."
 }
 
@@ -233,10 +324,7 @@ function display_finsh()
 
 function brget_usage()
 {
-	echo -e "$0 <http_url> [local_file]\n"
-	echo "exp:"
-	echo "$0 http://www.baidu.com/index.html"
-	echo "$0 http://www.baidu.com:80/index.html"
+	echo -e "$0 <http_url> [local_file]"
 }
 
 function main()
@@ -251,8 +339,8 @@ function main()
 	file_init
 	display_start $1
         socket_create $remote_host $remote_port
-        sock_write $remote_host $remote_port $remote_file
-        sock_read
+        br_send_request $remote_host $remote_port $remote_file
+	br_get_run
 	display_finsh
         socket_close
 }
