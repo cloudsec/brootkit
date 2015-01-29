@@ -15,6 +15,8 @@ function br_check_os_type()
                 br_os_type=2
         elif echo $line|grep "[Uu]buntu" >/dev/null; then
                 br_os_type=3
+        elif echo $line|grep "[Ff]edora" >/dev/null; then
+                br_os_type=4
         else
                 echo -e "target os type: $line is not supported."
                 exit 0
@@ -43,6 +45,20 @@ function uninstall_centos_home()
 	rm -fr /etc/profile.d/emacs.sh
 	rm -fr /etc/rc.d/init.d/brdaemon
 	rm -fr $BR_ROOTKIT_PATH
+}
+
+function uninstall_fedora_home()
+{
+        local idx
+
+        for idx in 0 1 2 3 4 5 6
+        do
+                rm -f /etc/rc.d/rc$idx.d/S10brdaemon
+        done
+
+        rm -fr /etc/profile.d/emacs.sh
+        rm -fr /etc/rc.d/init.d/brdaemon
+        rm -fr $BR_ROOTKIT_PATH
 }
 
 function uninstall_ubuntu_home()
@@ -85,6 +101,8 @@ function main()
                         uninstall_centos_home ;;
                 3)
                         uninstall_ubuntu_home ;;
+                4)
+                        uninstall_fedora_home ;;
         esac
 
 	exec /bin/bash

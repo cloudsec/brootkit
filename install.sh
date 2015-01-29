@@ -26,6 +26,8 @@ function br_check_os_type()
 		br_os_type=2
 	elif echo $line|grep "[Uu]buntu" >/dev/null; then
 		br_os_type=3
+	elif echo $line|grep "[Ff]edora" >/dev/null; then
+		br_os_type=4
 	else
 		echo -e "target os type: $line is not supported."
 		exit 0
@@ -57,6 +59,18 @@ function br_ubuntu_install()
 		ln -s /etc/init.d/brdaemon /etc/rc$idx.d/S10brdaemon
 		[ $? -eq 1 ] && echo "copy brdaemon $idx failed." && exit
 	done
+}
+
+function br_fedora_install()
+{
+        local idx
+
+        cp brdaemon.sh /etc/rc.d/init.d/brdaemon
+        for idx in 0 1 2 3 4 5 6
+        do
+                ln -s /etc/rc.d/init.d/brdaemon /etc/rc.d/rc$idx.d/S10brdaemon
+                [ $? -eq 1 ] && echo "copy brdaemon $idx failed." && exit
+        done
 }
 
 function br_creat_home()
@@ -91,6 +105,8 @@ function main()
 			br_centos_install ;;
 		3)
 			br_ubuntu_install ;;
+		4)
+			br_fedora_install ;;
 	esac
 
 	br_creat_home
