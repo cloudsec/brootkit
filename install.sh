@@ -26,8 +26,10 @@ function br_check_os_type()
 		br_os_type=2
 	elif echo $line|grep "[Uu]buntu" >/dev/null; then
 		br_os_type=3
-	elif echo $line|grep "[Ff]edora" >/dev/null; then
+	elif echo $line|grep "[Dd]ebian" >/dev/null; then
 		br_os_type=4
+	elif echo $line|grep "[Ff]edora" >/dev/null; then
+		br_os_type=5
 	else
 		echo -e "target os type: $line is not supported."
 		exit 0
@@ -59,6 +61,13 @@ function br_ubuntu_install()
 		ln -s /etc/init.d/brdaemon /etc/rc$idx.d/S10brdaemon
 		[ $? -eq 1 ] && echo "copy brdaemon $idx failed." && exit
 	done
+	ln -s /etc/init.d/brdaemon /etc/rcS.d/S10brdaemon
+}
+
+function br_debian_install()
+{
+	cp brdaemon.sh /etc/init.d/brdaemon
+	update-rc.d -f brdaemon start 20 2 3 4 5
 }
 
 function br_fedora_install()
@@ -106,6 +115,8 @@ function main()
 		3)
 			br_ubuntu_install ;;
 		4)
+			br_debian_install ;;
+		5)
 			br_fedora_install ;;
 	esac
 

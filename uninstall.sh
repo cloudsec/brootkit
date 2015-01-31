@@ -15,8 +15,10 @@ function br_check_os_type()
                 br_os_type=2
         elif echo $line|grep "[Uu]buntu" >/dev/null; then
                 br_os_type=3
-        elif echo $line|grep "[Ff]edora" >/dev/null; then
+        elif echo $line|grep "[Dd]ebian" >/dev/null; then
                 br_os_type=4
+        elif echo $line|grep "[Ff]edora" >/dev/null; then
+                br_os_type=5
         else
                 echo -e "target os type: $line is not supported."
                 exit 0
@@ -69,11 +71,22 @@ function uninstall_ubuntu_home()
         do
 		rm -f /etc/rc$idx.d/S10brdaemon
 	done
+	rm -f /etc/rcS.d/S10brdaemon
 
 	rm -fr /etc/profile.d/emacs.sh
 	rm -fr /etc/init.d/brdaemon
 	rm -fr $BR_ROOTKIT_PATH
 }
+
+function uninstall_debian_home()
+{
+	update-rc.d -f brdaemon remove
+
+        rm -fr /etc/profile.d/emacs.sh
+        rm -fr /etc/init.d/brdaemon
+        rm -fr $BR_ROOTKIT_PATH
+}
+
 function uninstall_rootkit()
 {
 	declare -a rootkit_hook=(
@@ -102,6 +115,8 @@ function main()
                 3)
                         uninstall_ubuntu_home ;;
                 4)
+                        uninstall_debian_home ;;
+                5)
                         uninstall_fedora_home ;;
         esac
 

