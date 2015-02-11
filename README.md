@@ -1,7 +1,7 @@
 ######BROOTKIT
-    Lightweight rootkit implemented by bash shell scripts v0.06
+    Lightweight rootkit implemented by bash shell scripts v0.08
     
-    by wzt 2015   wzt.wzt@gmail.com http://www.cloud-sec.org
+    by wzt 2015   wzt.wzt@gmail.com
     
     If bash shell scripts can be designed for security tools like chkrootkit
     or rkhunter, so it can be implemented for a rootkit.
@@ -16,7 +16,14 @@
     7. muilt thread port scanner.
     8. http download.
 
-######TUBO
+######TARGET OS
+    1. centos
+    2. rhel
+    3. ubuntu
+    4. debian
+    5. fedroa
+
+######TUDO
     1. sudo thief support.
 
 ######INSTALL
@@ -54,12 +61,25 @@
       exp:
       ./brscan.sh -p 21,22,23-25,80,135-139,8080 -t 20 www.cloud-sec.org
       ./brscan.sh -p 1-65525 -n 200 -t 20 www.cloud-sec.org
-      [root@localhost brootkit]$ ./brscan.sh -p 21,22-80 -n 20 www.aliyun.com
-      host: www.aliyun.com | total ports: 60 | thread num: 20 timeout: 30 | logfile: brscan.log
 
-      connect to www.aliyun.com:80 ok.
+      [root@localhost brootkit]# ./brscan.sh -p 21,22,23-25,80,135-139,8080 -t 5 -n 20 www.wooyun.org
+      host: www.wooyun.org | total ports: 10 | thread num: 10 timeout: 5 | logfile: brscan.log
+
+      thread<0    >           --              pid <57053>     -->     21
+      thread<1    >           --              pid <57054>     -->     22
+      thread<2    >           --              pid <57055>     -->     23
+      thread<3    >           --              pid <57056>     -->     24
+      thread<4    >           --              pid <57057>     -->     80
+      thread<5    >           --              pid <57058>     -->     135
+      thread<6    >           --              pid <57059>     -->     136
+      thread<7    >           --              pid <57060>     -->     137
+      thread<8    >           --              pid <57061>     -->     138
+      thread<9    >           --              pid <57070>     -->     8080
+
+      [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]     10/10     6 s
+
+      www.wooyun.org: 80
+
 
 ######SOURCE
     https://github.com/cloudsec/brootkit
-
-
