@@ -114,7 +114,7 @@
       Thread[ 5]      wzt@192.168.215.148             ==>     [123456          ]      [failed]         3
       Thread[ 6]      wzt@192.168.215.148             ==>     [fd              ]      [failed]         3
 
-waiting all threads to finsh...
+      waiting all threads to finsh...
 
     Freebsd system
     on the modern freebsd system, root use csh by default, the other users
