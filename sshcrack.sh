@@ -33,7 +33,7 @@ function sshcrack_init()
 
 function sshcrack_exit()
 {
-	local x=$((sshcrack_threadnum + 6)) y=1
+	local x=$((sshcrack_threadnum + 8)) y=1
 
 	echo -e "\033[${x}:${y}Hwaiting all threads to finsh...\033[0m"
         #echo -e "\033[?25h"
@@ -130,7 +130,7 @@ function sshcrack_engine()
 		do
 			for passwd in ${passwd_list[*]}
 			do
-				if [ $thread_num -gt $sshcrack_threadnum ]; then
+				if [ $thread_num -ge $sshcrack_threadnum ]; then
 					wait; thread_num=0; sleep 0.5; continue
 				fi
 				((thread_num++))

