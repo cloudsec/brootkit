@@ -9,12 +9,18 @@ set timeout [lindex $argv 4]
 
 #spawn -noecho ssh -o ServerAliveInterval=$TIMEOUT -o ConnectTimeout=$TIMEOUT -t $USER@$IP $CMD
 spawn -noecho ssh -o ServerAliveInterval=2 -o ConnectTimeout=2 -t $USER@$IP $CMD
+#spawn -noecho ssh -o ServerAliveInterval=2 -o ConnectTimeout=2 -t $USER@$IP
 expect {
-        "(yes/no)" { send "yes\r"; exp_continue }
-        "*assword:" { send "$PASSWD\r"; exp_continue }
-        "uid=" { send "exit\r"; exit 6}
-        "denied" { exit 3 }
-        "No route to host" { exit 4 }
-        timeout { exit 5 }
-	eof { exit 1 }
+	"(yes/no)" { send "yes\r"; exp_continue }
+	"*assword:" { send "$PASSWD\r" }
+	"Name or service not known" { exit 8}
+	"No route to host" { exit 4 }
+	timeout { exit 5 }
+	eof { exit 0 }
+}
+
+expect {
+        "*assword:" { exit 3 }
+        "uid=" { exit 6 }
+        eof { exit 7 }
 }

