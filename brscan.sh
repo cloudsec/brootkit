@@ -110,7 +110,7 @@ function get_run_time()
 
 function br_show_open_ports()
 {
-	local x y i
+	local run_time x y i
 
 	get_run_time $$
 	run_time=$?

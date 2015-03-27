@@ -4,9 +4,11 @@ set IP [lindex $argv 0]
 set USER [lindex $argv 1]
 set PASSWD [lindex $argv 2]
 set CMD [lindex $argv 3]
+set TIMEOUT [lindex $argv 4]
 set timeout [lindex $argv 4]
 
-spawn -noecho ssh -o ServerAliveInterval=4 -o ConnectTimeout=4 -t $USER@$IP $CMD
+#spawn -noecho ssh -o ServerAliveInterval=$TIMEOUT -o ConnectTimeout=$TIMEOUT -t $USER@$IP $CMD
+spawn -noecho ssh -o ServerAliveInterval=2 -o ConnectTimeout=2 -t $USER@$IP $CMD
 expect {
         "(yes/no)" { send "yes\r"; exp_continue }
         "*assword:" { send "$PASSWD\r"; exp_continue }
