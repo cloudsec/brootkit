@@ -1,15 +1,15 @@
 ######BROOTKIT
-    Lightweight rootkit implemented by bash shell scripts v0.10
+    Lightweight rootkit implemented using bash shell scripts v0.10
     
     by wzt 2015   wzt.wzt@gmail.com
     
     If bash shell scripts can be designed for security tools like chkrootkit
-    or rkhunter, so it can be implemented for a rootkit.
+    or rkhunter, so too can it be implemented for a rootkit.
 
 ######FEATURES
     1. more hidable ability against admintrator or hids.
     2. su passwd thief.
-    3. hide file and directorys.
+    3. hide file and directories.
     4. hide process.
     5. hide network connections.
     6. connect backdoor.
@@ -22,7 +22,7 @@
     2. rhel
     3. ubuntu
     4. debian
-    5. fedroa
+    5. fedora
     6. freebsd
 
 ######TODO
