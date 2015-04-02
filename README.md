@@ -1,15 +1,15 @@
 ######BROOTKIT
-    Lightweight rootkit implemented by bash shell scripts v0.10
+    Lightweight rootkit implemented using bash shell scripts v0.10
     
     by wzt 2015   wzt.wzt@gmail.com
     
     If bash shell scripts can be designed for security tools like chkrootkit
-    or rkhunter, so it can be implemented for a rootkit.
+    or rkhunter, so too can it be implemented for a rootkit.
 
 ######FEATURES
     1. more hidable ability against admintrator or hids.
     2. su passwd thief.
-    3. hide file and directorys.
+    3. hide file and directories.
     4. hide process.
     5. hide network connections.
     6. connect backdoor.
@@ -22,7 +22,7 @@
     2. rhel
     3. ubuntu
     4. debian
-    5. fedroa
+    5. fedora
     6. freebsd
 
 ######TODO
@@ -36,11 +36,11 @@
 
       brootkit config file.
 
-      #the ports will be hide: port1,port2,...,portn.
+      #these ports will be hidden: port1,port2,...,portn.
       HIDE_PORT               8080,8899
-      #the files will be hide: file1,file2,...,filen.
+      #these files will be hidden: file1,file2,...,filen.
       HIDE_FILE               br.conf,bashbd.sh,brootkit,.bdrc,brdaemon
-      #the process will be hide: process1,process2,...,processn.
+      #these processes will be hidden: process1,process2,...,processn.
       HIDE_PROC               bashbd,brootkit,pty.spawn,brdaemon
       #the connect back host domain name or ip address.
       REMOTE_HOST             localhost
@@ -48,6 +48,7 @@
       REMOTE_PORT             8080
       #the connect backdoor base sleep time.
       SLEEP_TIME              60
+
     2. ./install.sh
 
     3. multi thread port scanner.
@@ -57,7 +58,7 @@
 
       option:
       -p              ports, pattern: port1,port2,port3-port7,portn...
-      -n              thread num, defalut is 10
+      -n              thread num, default is 10
       -t              timeout, default is 30s
       -o              results write into log file, default is brscan.log
       -h              help information.
@@ -82,7 +83,7 @@
 
       [>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>]     10/10     6 s
 
-    www.wooyun.org: 80
+      www.wooyun.org: 80
 
     4. multi thread ssh passwd crack.
       [root@localhost brootkit]# ./sshcrack.sh
@@ -117,18 +118,18 @@
       waiting all threads to finsh...
 
     Freebsd system
-    on the modern freebsd system, root use csh by default, the other users
-    use sh default. this version brootkit can only support sh based features.
+    on the modern freebsd system root use csh by default, the other users
+    use sh default. this version of brootkit can only support sh based features.
 
     1. edit brsh.conf first
 
     brshootkit config file, only one argument support.
 
-      #the port will be hide.
+      #this port will be hidden.
       HIDE_PORT               8080
-      #the files will be hide file.
+      #these files will be hidden.
       HIDE_FILE               brsh
-      #the process will be hide process.
+      #these process will be hidden.
       HIDE_PROC               sh
       #the connect back host domain name or ip address.
       REMOTE_HOST             localhost
@@ -136,6 +137,7 @@
       REMOTE_PORT             8080
       #the connect backdoor base sleep time.
       SLEEP_TIME              60
+
     2. ./install.sh
 
 ######SOURCE
