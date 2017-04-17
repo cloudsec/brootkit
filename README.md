@@ -1,4 +1,4 @@
-######BROOTKIT
+###### BROOTKIT
     Lightweight rootkit implemented using bash shell scripts v0.10
     
     by wzt 2015   wzt.wzt@gmail.com
@@ -6,7 +6,7 @@
     If bash shell scripts can be designed for security tools like chkrootkit
     or rkhunter, so too can it be implemented for a rootkit.
 
-######FEATURES
+###### FEATURES
     1. more hidable ability against admintrator or hids.
     2. su passwd thief.
     3. hide file and directories.
@@ -17,7 +17,7 @@
     8. http download.
     9. multi thread ssh passwd crack.
 
-######TARGET OS
+###### TARGET OS
     1. centos
     2. rhel
     3. ubuntu
@@ -25,10 +25,10 @@
     5. fedora
     6. freebsd
 
-######TODO
+###### TODO
     1. sudo thief support.
 
-######INSTALL
+###### INSTALL
 
     Linux distribution systems.
 
@@ -140,5 +140,5 @@
 
     2. ./install.sh
 
-######SOURCE
+###### SOURCE
     https://github.com/cloudsec/brootkit
